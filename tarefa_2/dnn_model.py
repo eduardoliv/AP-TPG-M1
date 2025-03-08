@@ -1,14 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-"""
-dnn_experiment.py
-Trains a simple feedforward DNN using the teacher's neuralnet code.
-"""
-
-import numpy as np
-
 # Adapted by: Grupo 03
+
 from nn_complete.neuralnet import NeuralNetwork
 from nn_complete.layers import DenseLayer
 from nn_complete.activation import SigmoidActivation
@@ -17,11 +11,11 @@ from nn_complete.metrics import accuracy
 from dataset import Dataset
 
 def train_dnn(input_csv, output_csv):
-    # 1) Prepare data
+    # Prepare data
     dataset, _ = Dataset.prepare_dataset_for_dnn(input_csv, output_csv, sep="\t")
     n_features = dataset.X.shape[1]
 
-    # 2) Create and configure the network
+    # Create and configure the network
     net = NeuralNetwork(
         epochs=50,
         batch_size=16,
@@ -36,10 +30,10 @@ def train_dnn(input_csv, output_csv):
     net.add(DenseLayer(1))
     net.add(SigmoidActivation())
 
-    # 3) Train
+    # Train
     net.fit(dataset)
 
-    # 4) Evaluate on the same dataset (for demonstration)
+    # Evaluate on the same dataset (for demonstration)
     preds = net.predict(dataset)
     acc = accuracy(dataset.Y.reshape(-1, 1), preds)
     print(f"DNN accuracy on the training set: {acc:.4f}")

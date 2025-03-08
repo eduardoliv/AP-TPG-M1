@@ -110,7 +110,7 @@ class NeuralNetwork:
             raise ValueError("No metric specified for the neural network.")
 
 
-if __name__ == '__main__':
+""" if __name__ == '__main__':
     from activation import SigmoidActivation
     from metrics import mse, accuracy
     from data import read_csv
@@ -133,3 +133,4 @@ if __name__ == '__main__':
     # test
     out = net.predict(dataset)
     print(net.score(dataset, out))
+ """

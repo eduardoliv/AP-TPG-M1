@@ -20,9 +20,6 @@ class Optimizer:
 # Adapted by: Grupo 03
 
 class SGD:
-    """
-    Simple SGD optimizer with momentum.
-    """
     def __init__(self, lr=0.01, momentum=0.9):
         self.lr = lr
         self.momentum = momentum

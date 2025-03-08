@@ -30,7 +30,6 @@
 │   ├── rnn_model.py
 │   └── nn_complete/
 │       ├── activation.py
-│       ├── data.py
 │       ├── layers.py
 │       ├── losses.py
 │       ├── metrics.py

@@ -160,10 +160,11 @@ class RNN(Layer):
         return np.prod(self.W.shape) + np.prod(self.U.shape) + np.prod(self.V.shape)
 
 
-if __name__ == '__main__':
+""" if __name__ == '__main__':
     data = np.array([[[1, 2, 3], [4, 5, 6], [7, 8, 9]],
                      [[1, 2, 3], [4, 5, 6], [7, 8, 9]]])
     rnn = RNN(10, input_shape=(3, 3))
     rnn.initialize(SGD())
     print(rnn.forward_propagation(data))
     print(rnn.backward_propagation(data))
+ """

@@ -9,15 +9,13 @@ an RNN-based network. This is a minimal skeleton.
 """
 
 import numpy as np
+
 # Adapted by: Grupo 03
+
 from nn_complete.rnn import RNN
 from dataset import Dataset
 
 def convert_text_to_sequences(df, text_col="Text", max_len=10):
-    """
-    Minimal example: convert each text to a fixed-length sequence of integer indices.
-    Truncate or pad to 'max_len'.
-    """
     texts = df[text_col].astype(str).tolist()
     # simplistic tokenization
     vocab = {}
@@ -37,8 +35,8 @@ def convert_text_to_sequences(df, text_col="Text", max_len=10):
 
 class SimpleRNNModel:
     """
-    Wraps the RNN layer in a mini 'network' for demonstration.
-    We'll do a single RNN forward, ignoring final dense for now.
+    Wraps the RNN layer in a mini 'network' for demo.
+    We'll do a single RNN forward for now.
     """
 
     def __init__(self, n_units, timesteps, input_dim):
@@ -57,15 +55,7 @@ class SimpleRNNModel:
         return self.rnn_layer.backward_propagation(grad)
 
 def demo_rnn(input_csv, output_csv):
-    """
-    Minimal demonstration of reading data, converting to sequences, 
-    and running one forward/backward pass.
-    """
     df_merged = Dataset.load_data(input_csv, output_csv, sep="\t")
-    # Suppose we just do sequences of length 10, each token is 1-hot of dimension=15
-    # For simplicity, let's do integer indices -> one-hot inside the RNN? 
-    # The teacher's RNN code expects an input_dim dimension. We'll just do a placeholder.
-    # In reality, you'd create a separate embedding or 1-hot expand the sequence.
 
     sequences, vocab = convert_text_to_sequences(df_merged, max_len=5)
     # shape = (batch, timesteps) but we also need "input_dim"
@@ -85,7 +75,7 @@ def demo_rnn(input_csv, output_csv):
     # forward
     out = model.forward(X)
     # 'out' shape is (batch_size, timesteps, input_dim)
-    # For a real classification, you'd add a final dense layer and a loss function.
+    # For a real classification, we need to add a final dense layer and a loss function.
     # Let's just do a dummy backward pass using out as the gradient:
     grad = out  # not realistic
     model.backward(grad)
