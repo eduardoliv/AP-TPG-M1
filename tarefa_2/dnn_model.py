@@ -14,11 +14,11 @@ from nn_complete.layers import DenseLayer
 from nn_complete.activation import SigmoidActivation
 from nn_complete.losses import BinaryCrossEntropy
 from nn_complete.metrics import accuracy
-from data_preparation import prepare_dataset_for_dnn
+from dataset import Dataset
 
 def train_dnn(input_csv, output_csv):
     # 1) Prepare data
-    dataset, _ = prepare_dataset_for_dnn(input_csv, output_csv, sep="\t")
+    dataset, _ = Dataset.prepare_dataset_for_dnn(input_csv, output_csv, sep="\t")
     n_features = dataset.X.shape[1]
 
     # 2) Create and configure the network
@@ -41,10 +41,10 @@ def train_dnn(input_csv, output_csv):
 
     # 4) Evaluate on the same dataset (for demonstration)
     preds = net.predict(dataset)
-    acc = accuracy(dataset.y.reshape(-1, 1), preds)
+    acc = accuracy(dataset.Y.reshape(-1, 1), preds)
     print(f"DNN accuracy on the training set: {acc:.4f}")
 
 if __name__ == "__main__":
     # Example usage
-    train_dnn("../tarefa_1/clean_input_datasets/gpt_vs_human_data_set_inputs.csv",
-              "../tarefa_1/clean_output_datasets/gpt_vs_human_data_set_outputs.csv")
+    train_dnn("../tarefa_1/clean_input_datasets/dataset1_inputs.csv",
+              "../tarefa_1/clean_output_datasets/dataset1_outputs.csv")

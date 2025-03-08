@@ -11,7 +11,7 @@ an RNN-based network. This is a minimal skeleton.
 import numpy as np
 # Adapted by: Grupo 03
 from nn_complete.rnn import RNN
-from data_preparation import load_data, Data
+from dataset import Dataset
 
 def convert_text_to_sequences(df, text_col="Text", max_len=10):
     """
@@ -61,7 +61,7 @@ def demo_rnn(input_csv, output_csv):
     Minimal demonstration of reading data, converting to sequences, 
     and running one forward/backward pass.
     """
-    df_merged = load_data(input_csv, output_csv, sep="\t")
+    df_merged = Dataset.load_data(input_csv, output_csv, sep="\t")
     # Suppose we just do sequences of length 10, each token is 1-hot of dimension=15
     # For simplicity, let's do integer indices -> one-hot inside the RNN? 
     # The teacher's RNN code expects an input_dim dimension. We'll just do a placeholder.

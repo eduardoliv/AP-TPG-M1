@@ -60,7 +60,7 @@ class NeuralNetwork:
 
     def fit(self, dataset):
         X = dataset.X
-        y = dataset.y
+        y = dataset.Y
         if np.ndim(y) == 1:
             y = np.expand_dims(y, axis=1)
 

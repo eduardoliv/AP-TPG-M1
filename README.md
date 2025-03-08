@@ -18,21 +18,26 @@
 
 / (Root)
 ├── tarefa_1  
-│   ├── clean_input_datasets        (Uniformized input datasets)
-│   ├── clean_output_datasets       (Uniformized output datasets)
-│   ├── original_input_datasets     (Original input datasets)
-│   └── original_output_datasets    (Original output datasets)
-│   └── clean_pipeline.py           (Code for cleaning and normalizing datasets)
+│   ├── clean_input_datasets            (Uniformized input datasets)
+│   ├── clean_output_datasets           (Uniformized output datasets)
+│   ├── original_input_datasets         (Original input datasets)
+│   └── original_output_datasets        (Original output datasets)
+│   └── clean_pipeline.py               (Code for cleaning and normalizing datasets)
 ├── tarefa_2
-│   ├── data_preparation.py
-│   ├── logistic_regression.py
-|   ├── dnn_experiment.py
-|   ├── rnn_experiment.py
-│   └── main.py
+│   ├── data_preparation.py             # Preprocessing, feature extraction
+│   ├── logistic_regression_model.py
+│   ├── dnn_model.py
+│   ├── rnn_model.py
+│   └── nn_complete/
+│       ├── activation.py
+│       ├── data.py
+│       ├── layers.py
+│       ├── losses.py
+│       ├── metrics.py
+│       ├── neuralnet.py
+│       ├── optimizer.py
+│       └── rnn.py
 ├── tarefa_3
-│   │   ├── Z  
-│   │   └── z.1  
-│   └── y.1
 └── tarefa_4
 
 ```
