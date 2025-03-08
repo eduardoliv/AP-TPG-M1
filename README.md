@@ -12,14 +12,15 @@
 
 ## Organização do Repositório
 
-*TBD*
-
-````
+``` md
 / (Raiz)  
-├── X  
+├── tarefa_1  
 │   ├── Y  
 │   │   ├── Z  
 │   │   └── z.1  
-│   └── y.1  
-└── x.1  
+│   └── y.1
+├── tarefa_2
+├── tarefa_3
+└── tarefa_4
+
 ```
