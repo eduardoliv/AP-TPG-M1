@@ -24,10 +24,15 @@
 │   └── original_output_datasets    (Original output datasets)
 │   └── clean_pipeline.py           (Code for cleaning and normalizing datasets)
 ├── tarefa_2
+│   ├── data_preparation.py
+│   ├── logistic_regression.py
+|   ├── dnn_experiment.py
+|   ├── rnn_experiment.py
+│   └── main.py
+├── tarefa_3
 │   │   ├── Z  
 │   │   └── z.1  
 │   └── y.1
-├── tarefa_3
 └── tarefa_4
 
 ```
