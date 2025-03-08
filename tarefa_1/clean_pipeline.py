@@ -7,7 +7,6 @@ import argparse
 import os
 import glob
 import pandas as pd
-import sys
 import chardet
 import csv
 
@@ -18,61 +17,26 @@ def detect_file_encoding(file_path):
     return result['encoding']
 
 def clean_dataset_pipeline(file_path, output_path, sep, encoding, id_column, text_label_column, human_value, ai_value, is_output=False):
-    """
-    pipeline for cleaning and standardizing datasets.
-    
-    Parameters:
-      - file_path: Path to the original CSV file.
-      - output_path: Path to save the cleaned CSV file.
-      - sep: Delimiter used in the CSV (e.g., '\t').
-      - encoding: Input encoding to use when reading. If set to "auto", the encoding is detected automatically.
-      - id_column: Name of the column containing the ID.
-      - text_label_column: Name of the column containing text (for input) or label (for output).
-      - is_output: Boolean indicating if this is an output dataset.
-      - human_value: Value in the original file representing "Human" (e.g., '1').
-      - ai_value: Value in the original file representing "AI" (e.g., '0').
-    
-    Actions:
-      - Reads the entire file using the detected or provided input encoding.
-      - Selects only the specified columns.
-      - Renames the columns to a standard: 'ID' and 'Text' (for inputs) or 'ID' and 'Label' (for outputs).
-      - Trims whitespace from the values.
-      - For output datasets, maps the values to only 'Human' or 'AI'.
-      - Saves the cleaned file in UTF-8.
-    """
-
-    # Detect encoding if "auto" is specified
     input_encoding = encoding
     if encoding.lower() == "auto":
         input_encoding = detect_file_encoding(file_path)
 
-    try:
-        df = pd.read_csv(file_path, sep=sep, encoding=input_encoding, engine='python')
-    except Exception as e:
-        sys.exit(f"Error reading file {file_path}: {e}")
+    df = pd.read_csv(file_path, sep=sep, encoding=input_encoding, engine='python')
     
-    # Select the specified columns
-    try:
-        df = df[[id_column, text_label_column]]
-    except KeyError as e:
-        sys.exit(f"Column not found in file {file_path}: {e}")
+    df = df[[id_column, text_label_column]]
     
     # Rename columns to standard names and clean values
     if is_output:
         df = df.rename(columns={id_column: "ID", text_label_column: "Label"})
-        if human_value is None or ai_value is None:
-            sys.exit("For output datasets, human_value and ai_value must be specified.")
-        df["Label"] = df["Label"].astype(str).str.strip().apply(
-            lambda x: "Human" if x == human_value else ("AI" if x == ai_value else x)
+        if human_value and ai_value:
+            df["Label"] = df["Label"].astype(str).str.strip().apply(
+                lambda x: "Human" if x == human_value else ("AI" if x == ai_value else x)
         )
     else:
         df = df.rename(columns={id_column: "ID", text_label_column: "Text"})
         df["Text"] = df["Text"].astype(str).str.strip()
     
-    try:
-        df.to_csv(output_path, sep=sep, index=False, encoding="utf-8", quoting=csv.QUOTE_NONE,)
-    except Exception as e:
-        sys.exit(f"Error saving cleaned file {output_path}: {e}")
+    df.to_csv(output_path, sep=sep, index=False, encoding="utf-8", quoting=csv.QUOTE_NONE,)
 
 def process_files_in_directory(original_dir, clean_dir, is_output, sep, encoding, id_column, text_label_column, human_value=None, ai_value=None):
     if not os.path.exists(clean_dir):
@@ -88,7 +52,7 @@ def process_files_in_directory(original_dir, clean_dir, is_output, sep, encoding
         clean_dataset_pipeline(file_path, output_path, sep, encoding, id_column, text_label_column, human_value, ai_value, is_output)
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description="Dataset cleaning and standardization pipeline")
+    parser = argparse.ArgumentParser()
     
     # Default directories
     parser.add_argument("--original_input_dir", default="original_input_datasets", help="Directory containing original input datasets (default: original_input_datasets)")

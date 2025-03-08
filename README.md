@@ -31,3 +31,21 @@
 └── tarefa_4
 
 ```
+
+### Code Dependencies
+
+#### Using pip
+
+```bash
+
+pip install pandas chardet
+
+```
+
+#### Using conda
+
+```bash
+
+conda install -c conda-forge pandas chardet
+
+```
