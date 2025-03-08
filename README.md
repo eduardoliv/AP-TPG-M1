@@ -1,6 +1,8 @@
-# Aprendizagem Profunda - Trabalho prático em grupo – Módulo 1
+# Aprendizagem Profunda – Módulo 1
 
-## Constituição do Grupo
+## Trabalho prático em grupo 
+
+### Constituição do Grupo
 
 | #id     | Nome                             | Email                    | Grupo |
 | ------- | -------------------------------- | ------------------------ | ----- |
@@ -10,7 +12,7 @@
 | pg52688 | Jorge Eduardo Quinteiro Oliveira | pg52688@alunos.uminho.pt | 03    |
 | e12338  | Bernardo Dutra Lemos             | e12338@alunos.uminho.pt  | 03    |
 
-## Organização do Repositório
+### Organização do Repositório
 
 ``` md
 / (Raiz)  
