@@ -239,16 +239,18 @@ def main():
 
     # Simple gradient descent
     logmodel.gradientDescent(alpha=args.alpha, iters=args.iters)
-    
-    # shape => (n_samples, 1)
-    ones = np.ones((test_ds.X.shape[0], 1))
-    
-    # shape => (n_samples, n_features+1)
-    X_test_bias = np.hstack((ones, test_ds.X))
-    
-    # Evaluate on test
-    test_acc = logmodel.accuracy(X_test_bias, y_test)
-    print(f"[Test] Accuracy: {test_acc:.4f}")
+
+    # Evaluate Train Accuracy
+    ones_train = np.ones((train_ds.X.shape[0], 1))
+    X_train_bias = np.hstack((ones_train, train_ds.X))
+    train_acc = logmodel.accuracy(X_train_bias, train_ds.Y)
+    print(f"Train accuracy: {train_acc:.4f}")
+
+    # Evaluate Test Accuracy
+    ones_test = np.ones((test_ds.X.shape[0], 1))
+    X_test_bias = np.hstack((ones_test, test_ds.X))
+    test_acc = logmodel.accuracy(X_test_bias, test_ds.Y)
+    print(f"Test accuracy: {test_acc:.4f}")
     logmodel.plotModel()
 
 if __name__ == '__main__':
