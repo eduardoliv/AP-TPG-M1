@@ -2,12 +2,10 @@
 """
 @author: miguelrocha
 (Adapted by: Grupo 03)
-"""
 
-"""
 Usage Example:
 --------------
-python logistic_regression_model.py --input_csv ../tarefa_1/clean_input_datasets/dataset1_inputs.csv --output_csv ../tarefa_1/clean_output_datasets/dataset1_outputs.csv
+$ python logistic_regression_model.py --input_csv ../tarefa_1/clean_input_datasets/dataset1_inputs.csv --output_csv ../tarefa_1/clean_output_datasets/dataset1_outputs.csv
 """
 
 import numpy as np
@@ -17,19 +15,23 @@ from helpers.dataset import Dataset
 
 class LogisticRegression:
     
-    def __init__(self, dataset, standardize=False, regularization=False, lamda=1):
+    def __init__(self, dataset, standardize=False, regularization=False, lamda=1, epsilon=1e-10):
         if standardize:
             dataset.standardize()
             self.X = np.hstack((np.ones([dataset.nrows(),1]), dataset.Xst ))
             self.standardized = True
+            self.sigma = dataset.sigma
         else:
             self.X = np.hstack((np.ones([dataset.nrows(),1]), dataset.X ))
             self.standardized = False
+            self.sigma = None
+        
         self.y = dataset.Y
         self.theta = np.zeros(self.X.shape[1])
         self.regularization = regularization
         self.lamda = lamda
         self.data = dataset
+        self.epsilon = epsilon
 
     def buildModel(self):
         if self.regularization:
@@ -69,6 +71,10 @@ class LogisticRegression:
     def predict(self, instance):
         p = self.probability(instance)
         return 1 if p >= 0.5 else 0
+    
+    def predictMany(self, Xt):
+        p = sigmoid(np.dot(Xt, self.theta))
+        return np.where(p >= 0.5, 1, 0)
 
     def probability(self, instance):
         x = np.empty([self.X.shape[1]])
@@ -79,14 +85,44 @@ class LogisticRegression:
                 x[1:] = (x[1:] - self.data.mu) / self.data.sigma
             else:
                 x[1:] = (x[1:] - self.mu)
-        return sigmoid( np.dot(self.theta, x) )
+        return sigmoid(np.dot(self.theta, x))
 
     def costFunction(self, theta=None):
+        """
+        Logistic Regression Cost Function with Numerical Stability
+
+        Mathematically, the binary cross-entropy cost for logistic regression is:
+            J(theta) = - (1/m) * sum_{i=1}^m [ y(i) * log(p(i)) + (1 - y(i)) * log(1 - p(i)) ]
+        where:
+            m        = number of training samples
+            y(i)     = label of the i-th sample (0 or 1)
+            p(i)     = predicted probability = sigmoid(X(i) * theta)
+
+        However, if p(i) is exactly 0 or 1, log(p(i)) or log(1 - p(i)) becomes log(0),
+        which tends to negative infinity and can cause numerical issues (NaN/Inf).
+
+        To avoid this, we add a small constant epsilon (e.g. 1e-10) inside the log:
+            log( p(i) + epsilon ) and log( (1 - p(i)) + epsilon )
+
+        This ensures the argument to the log is never zero, preventing log(0).
+        The final cost thus becomes:
+
+            J(theta) = - (1/m) * [ y^T * log(p + epsilon)
+                                + (1 - y)^T * log((1 - p) + epsilon) ]
+        """
         if theta is None: theta = self.theta
+        # number of samples
         m = self.X.shape[0]
-        p = sigmoid(self.X.dot(theta))
-        cost = (-self.y * np.log(p) - (1-self.y)*np.log(1-p))
-        return np.sum(cost) / m
+        # predicted probabilities p = sigmoid(X * theta)
+        p = sigmoid(np.dot(self.X, theta))
+        # cost1 corresponds to - y^T * log(p + epsilon)
+        cost1 = - np.dot(self.y, np.log(p + self.epsilon))
+        # cost2 corresponds to - (1 - y)^T * log((1 - p) + epsilon)
+        cost2 = - np.dot((1 - self.y), np.log((1 - p) + self.epsilon))
+        # total cost is cost1 + cost2, then averaged over m
+        cost = cost1 + cost2
+        J = cost / m
+        return J
 
     def costFunctionReg(self, theta = None, lamda = 1):
         if theta is None: theta= self.theta        
@@ -144,10 +180,6 @@ class LogisticRegression:
         plt.contour( u, v, z, [0.0, 0.001])
         plt.show()
 
-    def predictMany(self, Xt):
-        p = sigmoid ( np.dot(Xt, self.theta) )
-        return np.where(p >= 0.5, 1, 0)
-
     def accuracy(self, Xt, yt):
         preds = self.predictMany(Xt)
         errors = np.abs(preds-yt)
@@ -198,6 +230,10 @@ def main():
     train_ds = Dataset(X=X_train, Y=y_train)
     test_ds = Dataset(X=X_test, Y=y_test)
 
+    # Validate Train and Test dataset division
+    print(f"Train set has {train_ds.nrows()} rows and {train_ds.ncols()} columns")
+    print(f"Test set has {test_ds.nrows()} rows and {test_ds.ncols()} columns\n")
+
     # Build logistic regression model
     logmodel = LogisticRegression(train_ds, regularization=args.regularization, lamda=args.lamda)
 
@@ -213,6 +249,7 @@ def main():
     # Evaluate on test
     test_acc = logmodel.accuracy(X_test_bias, y_test)
     print(f"[Test] Accuracy: {test_acc:.4f}")
+    logmodel.plotModel()
 
 if __name__ == '__main__':
     main()
