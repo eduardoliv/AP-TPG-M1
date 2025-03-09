@@ -16,7 +16,7 @@ from helpers.layers import Layer
 from helpers.losses import BinaryCrossEntropy, LossFunction
 from helpers.optimizer import Optimizer
 from helpers.metrics import accuracy
-from dataset import Dataset
+from helpers.dataset import Dataset
 
 def convert_text_to_sequences(df, text_col="Text"):
     texts = df[text_col].astype(str).tolist()

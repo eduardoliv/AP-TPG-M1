@@ -13,7 +13,7 @@ python logistic_regression_model.py --train_in ../tarefa_1/clean_input_datasets/
 import numpy as np
 import matplotlib.pyplot as plt
 
-from dataset import Dataset
+from helpers.dataset import Dataset
 
 class LogisticRegression:
     

@@ -92,34 +92,112 @@ class Dataset:
         df_merged = pd.merge(df_input, df_output, on="ID")
         return df_merged
 
-    def vectorize_text_bow(df, text_col="Text"):
-        texts = df[text_col].astype(str).tolist()
-        token_lists = [line.lower().split() for line in texts]
-
+    def build_vocab(texts):
+        """
+        Builds a bag-of-words vocabulary from the list of texts (train portion).
+        Returns a dict: {token: index}.
+        """
         vocab = {}
-        for tokens in token_lists:
-            for token in tokens:
-                if token not in vocab:
-                    vocab[token] = len(vocab)
+        for txt in texts:
+            for tok in txt.lower().split():
+                if tok not in vocab:
+                    vocab[tok] = len(vocab)
+        return vocab
 
-        X = []
-        for tokens in token_lists:
+    def vectorize_text_bow(texts, vocab):
+        """
+        Vectorizes a list of texts into a BOW matrix (n_samples, vocab_size).
+        If a token isn't in vocab, it's ignored.
+        """
+        X_list = []
+        for txt in texts:
             row = np.zeros(len(vocab), dtype=float)
-            for token in tokens:
-                idx = vocab[token]
-                row[idx] += 1.0
-            X.append(row)
-        X = np.array(X)
-        return X, vocab
-    
-    def prepare_dataset_for_bow(input_csv, output_csv, sep="\t"):
+            for tok in txt.lower().split():
+                if tok in vocab:
+                    row[vocab[tok]] += 1.0
+            X_list.append(row)
+        return np.array(X_list)
+
+    def train_test_split_custom(df, labels, test_size=0.2, random_state=None, shuffle=True):
+        """
+        Splits 'df' and 'labels' into train/test subsets with proportion 'test_size' for test.
+
+        Parameters
+        ----------
+        df : pd.DataFrame
+            The merged DataFrame containing at least [ID, Text, Label] or other columns.
+        labels : np.ndarray
+            Array of shape (n_samples,) with numeric labels (0/1 or otherwise).
+        test_size : float
+            Proportion of the dataset to include in the test split (0 < test_size < 1).
+        random_state : int or None
+            Seed for the random generator. If None, uses current NumPy RNG state.
+        shuffle : bool
+            Whether to shuffle the data before splitting.
+
+        Returns
+        -------
+        df_train : pd.DataFrame
+        df_test  : pd.DataFrame
+        y_train  : np.ndarray
+        y_test   : np.ndarray
+        """
+        n_samples = len(df)
+        indices = np.arange(n_samples)
+
+        # Optional random seeding
+        if random_state is not None:
+            np.random.seed(random_state)
+
+        if shuffle:
+            np.random.shuffle(indices)
+
+        n_test = int(test_size * n_samples)
+        test_idx = indices[:n_test]
+        train_idx = indices[n_test:]
+
+        df_train = df.iloc[train_idx]
+        df_test = df.iloc[test_idx]
+        y_train = labels[train_idx]
+        y_test = labels[test_idx]
+
+        return df_train, df_test, y_train, y_test
+
+    def prepare_train_test_bow(input_csv, output_csv, test_size=0.2, random_state=42, sep="\t"):
+        """
+        Merges input_csv and output_csv by ID into a single DataFrame.
+        Splits that data into train/test sets by 'test_size' proportion.
+        Builds a vocabulary from the *train* portion only.
+        Vectorizes train texts and test texts using that vocab.
+        Maps "Human"/"AI" => 0/1 labels.
+
+        Returns: X_train, y_train, X_test, y_test, vocab
+        """
+        # Load merged data
         df_merged = Dataset.load_data(input_csv, output_csv, sep=sep)
-        ids = df_merged["ID"].values
 
-        X, vocab = Dataset.vectorize_text_bow(df_merged, text_col="Text")
-        Y = np.where(df_merged["Label"] == "Human", 0, 1).astype(float)
+        # Convert label "Human"/"AI" to 0/1
+        labels = np.where(df_merged["Label"] == "AI", 1.0, 0.0)
 
-        return Dataset(X=X, Y=Y, ids=ids), vocab
+        # Split into train/test
+        #    df_train, df_test have columns: [ID, Text, Label]
+        #    y_train, y_test are arrays of shape (n_samples,)
+        df_train, df_test, y_train, y_test = Dataset.train_test_split_custom(
+            df_merged, labels, test_size=test_size, random_state=random_state, shuffle=True
+        )
+
+        # Build vocab from the train portion only
+        train_texts = df_train["Text"].astype(str).tolist()
+        vocab = Dataset.build_vocab(train_texts)
+
+        # Vectorize train texts
+        X_train = Dataset.vectorize_text_bow(train_texts, vocab)
+
+        # Vectorize test texts (using the *same* vocab)
+        test_texts = df_test["Text"].astype(str).tolist()
+        X_test = Dataset.vectorize_text_bow(test_texts, vocab)
+
+        return X_train, y_train, X_test, y_test, vocab
 
     def create_train_dataset(train_input_csv, train_output_csv, max_len=None, sep="\t"):
         """
