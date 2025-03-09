@@ -13,8 +13,9 @@ import argparse
 
 from helpers.activation import TanhActivation, ActivationLayer
 from helpers.layers import Layer
-from helpers.losses import BinaryCrossEntropy
-from helpers.optimizer import SGD
+from helpers.losses import BinaryCrossEntropy, LossFunction
+from helpers.optimizer import Optimizer
+from helpers.metrics import accuracy
 from dataset import Dataset
 
 def convert_text_to_sequences(df, text_col="Text"):
@@ -50,7 +51,7 @@ def pad_or_truncate(token_lists, vocab, max_len):
 class RNN(Layer):
     """A Vanilla Fully-Connected Recurrent Neural Network layer."""
 
-    def __init__(self, n_units: int, activation: ActivationLayer = None, bptt_trunc: int = 5, input_shape: Tuple = None):
+    def __init__(self, n_units: int, activation: ActivationLayer = TanhActivation(), bptt_trunc: int = 5, input_shape: Tuple = None, epochs = 100, batch_size = 128, learning_rate = 0.01, momentum = 0.90, loss: LossFunction = BinaryCrossEntropy, metric:callable = accuracy, verbose = False):
         """
         Initializes the layer.
 
@@ -67,12 +68,29 @@ class RNN(Layer):
         """
         self.input_shape = input_shape
         self.n_units = n_units
-        self.activation = TanhActivation() if activation is None else activation
+        self.activation = activation
         self.bptt_trunc = bptt_trunc
+        self.metric = metric
+        self.epochs = epochs
+        self.batch_size = batch_size
+        self.learning_rate = learning_rate
+        self.momentum = momentum
+        self.loss_fn = loss()
+        self.metric_fn = metric
+        self.verbose = verbose
 
+        # Weights
         self.W = None  # Weight of the previous state
         self.V = None  # Weight of the output
         self.U = None  # Weight of the input
+
+        # Optimizers
+        self.U_opt = None
+        self.V_opt = None
+        self.W_opt = None
+
+        # For tracking training
+        self.history = {}
 
     def initialize(self, optimizer):
         """
@@ -95,6 +113,18 @@ class RNN(Layer):
         self.V_opt = deepcopy(optimizer)
         self.W_opt = deepcopy(optimizer)
 
+    def get_mini_batches(self, X, y = None,shuffle = True):
+        n_samples = X.shape[0]
+        indices = np.arange(n_samples)
+        assert self.batch_size <= n_samples, "Batch size cannot be greater than the number of samples"
+        if shuffle:
+            np.random.shuffle(indices)
+        for start in range(0, n_samples - self.batch_size + 1, self.batch_size):
+            if y is not None:
+                yield X[indices[start:start + self.batch_size]], y[indices[start:start + self.batch_size]]
+            else:
+                yield X[indices[start:start + self.batch_size]], None
+    
     def forward_propagation(self, input: np.ndarray, training: bool = True) -> np.ndarray:
         """
         Perform forward propagation on the given input.
@@ -196,61 +226,135 @@ class RNN(Layer):
             The number of parameters of the layer.
         """
         return np.prod(self.W.shape) + np.prod(self.U.shape) + np.prod(self.V.shape)
+    
+    def predict_proba(self, dataset):
+        """
+        Return predicted probabilities at the last time step.
+        dataset shape: (num_samples, timesteps, input_dim)
+        Returns shape: (num_samples,)
+        """
+        out = self.forward_propagation(dataset, training=False)
+        # last time step, single dimension
+        return out[:, -1, 0]
+
+    def predict(self, dataset):
+        """
+        Return binary predictions (0 or 1).
+        """
+        probs = self.predict_proba(dataset)
+        return (probs >= 0.5).astype(float)
+
+    def score(self, dataset, predictions):
+        if self.metric is not None:
+            return self.metric(dataset.Y, predictions)
+        else:
+            raise ValueError("No metric specified for the neural network.")
+
+    def fit(self, dataset):
+        X = dataset.X
+        y = dataset.Y
+
+        if np.ndim(y) == 1:
+            y = np.expand_dims(y, axis=1)
+
+        self.history = {}
+        
+        for epoch in range(1, self.epochs + 1):
+            epoch_preds = []
+            epoch_labels = []
+
+            for X_batch, y_batch in self.get_mini_batches(X, y):
+                # forward => (batch_size, timesteps, input_dim)
+                out = self.forward_propagation(X_batch, training=True)
+                # extract final time step => shape (batch_size,)
+                pred = out[:, -1, 0]
+
+                # compute derivative wrt final step
+                d_pred = self.loss_fn.derivative(y_batch.ravel(), pred)
+                # embed into full shape
+                grad_out = np.zeros_like(out)          # (batch_size, timesteps, input_dim)
+                grad_out[:, -1, 0] = d_pred            # place derivative at final step
+
+                # backward
+                self.backward_propagation(grad_out)
+
+                # store predictions
+                epoch_preds.append(pred)
+                epoch_labels.append(y_batch.ravel())
+
+            # after mini-batches => compute epoch-level metrics
+            preds_all = np.concatenate(epoch_preds)      # shape => (n_samples,)
+            labels_all = np.concatenate(epoch_labels)    # shape => (n_samples,)
+
+            # compute loss
+            loss_val = self.loss_fn.loss(labels_all, preds_all)
+
+            if self.metric_fn is not None:
+                metric_val = self.metric_fn(labels_all, preds_all)
+            else:
+                metric_val = None
+
+            self.history[epoch] = {"loss": loss_val, "metric": metric_val}
+            if self.verbose:
+                m_s = f"{metric_val:.4f}" if metric_val is not None else "NA"
+                print(f"Epoch {epoch}/{self.epochs} - loss: {loss_val:.4f} - metric: {m_s}")
+
+        return self
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--input_csv", required=True, help="Path to input CSV (ID, Text)")
     parser.add_argument("--output_csv", required=True, help="Path to output CSV (ID, Label)")
-    parser.add_argument("--epochs", type=int, default=5, help="Number of training epochs")
+    parser.add_argument("--epochs", type=int, default=100, help="Number of training epochs (Default: 100)")
+    parser.add_argument("--batch_size", type=int, default=6, help="Mini-batch size (Default: 6)")
+    parser.add_argument("--learning_rate", type=float, default=0.01, help="Learning rate (Default: 0.01)")
+    parser.add_argument("--momentum", type=float, default=0.9, help="Momentum (Default: 0.9)")
+    parser.add_argument("--bptt_trunc", type=int, default=1, help="Truncation steps for BPTT (Default: 1)")
+    parser.add_argument("--verbose", default=True, help="Print training details (Default: True)")
     args = parser.parse_args()
 
-    # Load CSVs
-    df_merged = Dataset.load_data(args.input_csv, args.output_csv, sep="\t")
+    # Load Datasets
+    train_ds, vocab, max_len = Dataset.create_train_dataset(
+        train_input_csv=args.input_csv,
+        train_output_csv=args.output_csv,
+        max_len=None,
+        sep="\t"
+    )
 
-    # Convert label "Human"/"AI" => 0/1
-    labels_str = df_merged["Label"].values
-    y = np.where(labels_str == "Human", 0.0, 1.0).astype(float)
+    test_ds = Dataset.create_test_dataset(
+        test_input_csv=args.input_csv,
+        test_output_csv=args.output_csv,
+        vocab=vocab,
+        max_len=max_len,
+        sep="\t"
+    )
 
-    # Convert text to sequences, automatically get max_len
-    token_lists, vocab, max_len = convert_text_to_sequences(df_merged, text_col="Text")
+    # Instantiate the RNN
+    rnn = RNN(
+        n_units=4,
+        activation=TanhActivation(),
+        bptt_trunc=args.bptt_trunc,
+        input_shape=(max_len, 1),  # timesteps=max_len, input_dim=1
+        epochs=args.epochs,
+        batch_size=args.batch_size,
+        learning_rate=args.learning_rate,
+        momentum=args.momentum,
+        loss=BinaryCrossEntropy,
+        metric=accuracy,
+        verbose=args.verbose
+    )
 
-    # pad/truncate with that max_len
-    sequences = pad_or_truncate(token_lists, vocab, max_len)
-
-    # shape => (num_samples, max_len) -> (batch_size, timesteps, input_dim=1)
-    X = sequences.reshape(len(sequences), max_len, 1).astype(float)
-
-    # Create RNN
-    rnn = RNN(n_units=4, input_shape=(max_len, 1))
-    optimizer = SGD(learning_rate=0.01, momentum=0.9)
+    # Initialize the RNN with an SGD optimizer
+    optimizer = Optimizer(learning_rate=args.learning_rate, momentum=args.momentum)
     rnn.initialize(optimizer)
 
-    # Use BinaryCrossEntropy
-    bce = BinaryCrossEntropy()
+    # Fit the RNN using dataset
+    rnn.fit(train_ds)
 
-    # Training loop
-    for epoch in range(args.epochs):
-        # Forward
-        out = rnn.forward_propagation(X)  # shape: (batch_size, max_len, 1)
-        # We'll treat the last time step as the "prediction"
-        pred = out[:, -1, 0]  # shape: (batch_size,)
-
-        # Cost + gradient
-        cost = bce.loss(y, pred)
-        grad_pred = bce.derivative(y, pred)
-        # we do average in cost, so let's keep it consistent
-        # grad_pred shape: (batch_size,)
-
-        # Expand to match out shape
-        grad_out = np.zeros_like(out)
-        grad_out[:, -1, 0] = grad_pred
-
-        # Backward
-        rnn.backward_propagation(grad_out)
-
-        print(f"Epoch {epoch+1}/{args.epochs}, cost={cost:.6f}")
-
-    print("Training completed. Final cost:", cost)
+    # Evaluate final performance
+    preds = rnn.predict(test_ds.X)
+    score = rnn.score(test_ds, preds)
+    print(f"Final score: {score:.4f}")
 
 if __name__ == "__main__":
     main()

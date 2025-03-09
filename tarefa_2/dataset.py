@@ -24,7 +24,7 @@ class Dataset:
         self.Xst = None
 
     # ----------------------------------------------------------------
-    # 1) Original numeric dataset methods
+    # Original numeric dataset methods
     # ----------------------------------------------------------------
     def readDataset(self, filename, sep=","):
         data = np.genfromtxt(filename, delimiter=sep)
@@ -84,7 +84,7 @@ class Dataset:
         plt.show()
 
     # ----------------------------------------------------------------
-    # 2) New static/class methods to handle text merging & BOW
+    # New static/class methods to handle text merging & BOW
     # ----------------------------------------------------------------
     def load_data(input_path, output_path, sep="\t"):
         df_input = pd.read_csv(input_path, sep=sep)
@@ -121,20 +121,139 @@ class Dataset:
 
         return Dataset(X=X, Y=Y, ids=ids), vocab
 
-    def prepare_dataset_for_logistic(input_csv, output_csv, sep="\t"):
-        df_merged = Dataset.load_data(input_csv, output_csv, sep=sep)
-        ids = df_merged["ID"].values
+    def create_train_dataset(train_input_csv, train_output_csv, max_len=None, sep="\t"):
+        """
+        Reads train_input_csv (ID,Text) and train_output_csv (ID,Label) line-by-line,
+        assuming same number of rows and matching ID in each line.
 
-        X, vocab = Dataset.vectorize_text_bow(df_merged, text_col="Text")
-        Y = np.where(df_merged["Label"] == "Human", 0, 1).astype(float)
+        1) Tokenizes each text, builds a vocabulary
+        2) If max_len not provided, uses the longest text
+        3) Pads/truncates sequences to max_len
+        4) Maps "Human"/"AI" => 0/1
+        5) Returns (train_dataset, vocab, final_len)
+        where train_dataset is a Dataset object with .X shaped (n_samples, final_len, 1)
+        and .Y shaped (n_samples,)
+        """
+        df_in = pd.read_csv(train_input_csv, sep=sep)
+        df_out = pd.read_csv(train_output_csv, sep=sep)
 
-        return Dataset(X=X, Y=Y, ids=ids), vocab
-    
-    def prepare_dataset_for_dnn(input_csv, output_csv, sep="\t"):
-        df_merged = Dataset.load_data(input_csv, output_csv, sep=sep)
-        ids = df_merged["ID"].values
+        if len(df_in) != len(df_out):
+            raise ValueError("Train inputs and outputs CSV do not have the same number of rows.")
 
-        X, vocab = Dataset.vectorize_text_bow(df_merged, text_col="Text")
-        Y = np.where(df_merged["Label"] == "Human", 0, 1).astype(float)
+        tokenized_texts = []
+        labels = []
+        ids_list = []
+        longest = 0
 
-        return Dataset(X=X, Y=Y, ids=ids), vocab
+        # line-by-line
+        for i in range(len(df_in)):
+            ID_in = df_in.loc[i, "ID"]
+            ID_out = df_out.loc[i, "ID"]
+            if ID_in != ID_out:
+                raise ValueError(f"Train row {i} mismatch: ID_in={ID_in}, ID_out={ID_out}")
+
+            text_str = str(df_in.loc[i, "Text"])
+            label_str = str(df_out.loc[i, "Label"])
+
+            # label => 0 or 1
+            label_val = 1.0 if label_str == "AI" else 0.0
+
+            # tokenize
+            tokens = text_str.lower().split()
+            if len(tokens) > longest:
+                longest = len(tokens)
+
+            tokenized_texts.append(tokens)
+            labels.append(label_val)
+            ids_list.append(ID_in)
+
+        # if max_len not provided, use longest text
+        if max_len is None:
+            max_len = longest
+
+        # build vocab
+        vocab = {}
+        for tokens in tokenized_texts:
+            for tok in tokens:
+                if tok not in vocab:
+                    vocab[tok] = len(vocab) + 1  # start from 1, e.g.
+
+        # convert each text to integer IDs, pad/truncate
+        X_list = []
+        for tokens in tokenized_texts:
+            seq = [vocab[tok] for tok in tokens]
+            seq = seq[:max_len]
+            seq += [0]*(max_len - len(seq))
+            X_list.append(seq)
+
+        X_array = np.array(X_list)             # shape => (n_samples, max_len)
+        y_array = np.array(labels)             # shape => (n_samples,)
+        ids_arr = np.array(ids_list)
+
+        # reshape X to (n_samples, max_len, 1)
+        X_3d = X_array.reshape((X_array.shape[0], X_array.shape[1], 1))
+
+        # build a Dataset
+        train_ds = Dataset(X=X_3d, Y=y_array, ids=ids_arr)
+        return train_ds, vocab, max_len
+
+
+    def create_test_dataset(test_input_csv, test_output_csv, vocab, max_len, sep="\t"):
+        """
+        Reads test_input_csv (ID,Text) and test_output_csv (ID,Label) line-by-line,
+        re-using the 'vocab' from training and 'max_len' to ensure consistency.
+
+        1) If a token is not in vocab, map it to 0 (UNK).
+        2) Pads/truncates sequences to 'max_len'
+        3) Maps "Human"/"AI" => 0/1
+        4) Returns test_dataset with .X shape => (n_samples, max_len, 1), .Y shape => (n_samples,)
+
+        No new vocab entries are added here, ensuring consistent token IDs as training.
+        """
+        df_in = pd.read_csv(test_input_csv, sep=sep)
+        df_out = pd.read_csv(test_output_csv, sep=sep)
+
+        if len(df_in) != len(df_out):
+            raise ValueError("Test inputs and outputs CSV do not have the same number of rows.")
+
+        tokenized_texts = []
+        labels = []
+        ids_list = []
+
+        for i in range(len(df_in)):
+            ID_in = df_in.loc[i, "ID"]
+            ID_out = df_out.loc[i, "ID"]
+            if ID_in != ID_out:
+                raise ValueError(f"Test row {i} mismatch: ID_in={ID_in}, ID_out={ID_out}")
+
+            text_str = str(df_in.loc[i, "Text"])
+            label_str = str(df_out.loc[i, "Label"])
+
+            label_val = 1.0 if label_str == "AI" else 0.0
+
+            tokens = text_str.lower().split()
+            tokenized_texts.append(tokens)
+            labels.append(label_val)
+            ids_list.append(ID_in)
+
+        # convert each text to integer IDs, pad/truncate with the same max_len
+        X_list = []
+        for tokens in tokenized_texts:
+            seq = []
+            for tok in tokens:
+                if tok in vocab:
+                    seq.append(vocab[tok])
+                else:
+                    seq.append(0)  # UNK
+            seq = seq[:max_len]
+            seq += [0]*(max_len - len(seq))
+            X_list.append(seq)
+
+        X_array = np.array(X_list)            # shape => (n_samples, max_len)
+        y_array = np.array(labels)
+        ids_arr = np.array(ids_list)
+
+        X_3d = X_array.reshape((X_array.shape[0], X_array.shape[1], 1))
+
+        test_ds = Dataset(X=X_3d, Y=y_array, ids=ids_arr)
+        return test_ds

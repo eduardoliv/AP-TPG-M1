@@ -16,18 +16,3 @@ class Optimizer:
         self.retained_gradient = self.momentum * self.retained_gradient + (1 - self.momentum) * grad_loss_w
         #self.retained_gradient = grad_loss_w
         return w - self.learning_rate * self.retained_gradient
-
-# Adapted by: Grupo 03
-
-class SGD:
-    def __init__(self, lr=0.01, momentum=0.9):
-        self.lr = lr
-        self.momentum = momentum
-        self.retained_gradient = None
-
-    def update(self, w, grad_loss_w):
-        if self.retained_gradient is None:
-            self.retained_gradient = np.zeros_like(w)
-        # momentum-based update
-        self.retained_gradient = self.momentum * self.retained_gradient + (1 - self.momentum) * grad_loss_w
-        return w - self.lr * self.retained_gradient
