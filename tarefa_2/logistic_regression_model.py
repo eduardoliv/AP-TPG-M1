@@ -7,7 +7,7 @@
 """
 Usage Example:
 --------------
-python logistic_regression_model.py --train_in ../tarefa_1/clean_input_datasets/dataset1_inputs.csv --train_out ../tarefa_1/clean_output_datasets/dataset1_outputs.csv
+python logistic_regression_model.py --input_csv ../tarefa_1/clean_input_datasets/dataset1_inputs.csv --output_csv ../tarefa_1/clean_output_datasets/dataset1_outputs.csv
 """
 
 import numpy as np
@@ -177,29 +177,42 @@ def mapFeature(X1, X2, degrees = 6):
 def main():
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument("--train_in", required=True, help="CSV for training input (ID, Text)")
-    parser.add_argument("--train_out", required=True, help="CSV for training output (ID, Label)")
-    parser.add_argument("--regularization", default=False, help="Use L2 regularization approach")
-    parser.add_argument("--lamda", type=float, default=1.0, help="Lambda for L2 regularization")
+    parser.add_argument("--input_csv", required=True, help="CSV for training input (ID, Text)")
+    parser.add_argument("--output_csv", required=True, help="CSV for training output (ID, Label)")
+    parser.add_argument("--regularization", default=True, help="Use L2 regularization approach")
+    parser.add_argument("--lamda", type=float, default=10, help="Lambda for L2 regularization")
+    parser.add_argument("--alpha", type=float, default=0.001, help="Learning rate for gradient descent")
+    parser.add_argument("--iters", type=int, default=40000, help="Iterations for gradient descent")
     args = parser.parse_args()
 
-    # Prepare train Dataset for Bag of Words
-    train_ds, _ = Dataset.prepare_dataset_for_bow(args.train_in, args.train_out)
-    
+    # Load Datasets
+    X_train, y_train, X_test, y_test, vocab = Dataset.prepare_train_test_bow(
+        input_csv=args.input_csv,
+        output_csv=args.output_csv,
+        test_size=0.3,
+        random_state=42,
+        sep="\t"
+    )
+
+    # Wrap Dataset object
+    train_ds = Dataset(X=X_train, Y=y_train)
+    test_ds = Dataset(X=X_test, Y=y_test)
+
     # Build logistic regression model
     logmodel = LogisticRegression(train_ds, regularization=args.regularization, lamda=args.lamda)
-    #logmodel.buildModel()
 
     # Simple gradient descent
-    #logmodel.gradientDescent(alpha=0.01, iters=20000)
-
-    #logmodel.plotModel()
-
-    # Evaluate on the training set
-    #train_acc = logmodel.accuracy(logmodel.X, logmodel.y)
-    #print(f"[Train] Accuracy: {train_acc:.4f}")
-
-    print(logmodel.holdout())
+    logmodel.gradientDescent(alpha=args.alpha, iters=args.iters)
+    
+    # shape => (n_samples, 1)
+    ones = np.ones((test_ds.X.shape[0], 1))
+    
+    # shape => (n_samples, n_features+1)
+    X_test_bias = np.hstack((ones, test_ds.X))
+    
+    # Evaluate on test
+    test_acc = logmodel.accuracy(X_test_bias, y_test)
+    print(f"[Test] Accuracy: {test_acc:.4f}")
 
 if __name__ == '__main__':
     main()
