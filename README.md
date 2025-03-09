@@ -24,20 +24,20 @@
 │   └── original_output_datasets        (Original output datasets)
 │   └── clean_pipeline.py               (Code for cleaning and normalizing datasets)
 ├── tarefa_2
-│   ├── data_preparation.py             # Preprocessing, feature extraction
-│   ├── logistic_regression_model.py
-│   ├── dnn_model.py
-│   ├── rnn_model.py
-│   └── nn_complete/
+│   ├── logistic_regression_model.py    (Logistic Regression Model)
+│   ├── dnn_model.py                    (Deep Neural Network Model)
+│   ├── rnn_model.py                    (Recurrent Neural Network Model)
+│   └── helpers/                        (Code Utilities: Dataset, Activation, Layers, Losses, Metrics and Optimizers)
+|       ├── dataset.py
 │       ├── activation.py
 │       ├── layers.py
 │       ├── losses.py
 │       ├── metrics.py
-│       ├── neuralnet.py
-│       ├── optimizer.py
-│       └── rnn.py
+│       └── optimizer.py
 ├── tarefa_3
+|   └── Work-in-Progress
 └── tarefa_4
+    └── Work-in-Progress
 
 ```
 
