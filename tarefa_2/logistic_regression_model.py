@@ -114,7 +114,6 @@ class LogisticRegression:
                                 + (1 - y)^T * log((1 - p) + epsilon) ]
         """
         if theta is None: theta = self.theta
-        # number of samples
         m = self.X.shape[0]
         # predicted probabilities p = sigmoid(X * theta)
         p = sigmoid(np.dot(self.X, theta))
