@@ -207,6 +207,39 @@ def mapFeature(X1, X2, degrees = 6):
             out   = np.hstack(( out, term ))
     return out
 
+def confusion_matrix(y_true, y_pred):
+    # y_true, y_pred: arrays of 0 or 1
+    TP = FP = TN = FN = 0
+    for t, p in zip(y_true, y_pred):
+        if t == 1 and p == 1:
+            TP += 1
+        elif t == 0 and p == 1:
+            FP += 1
+        elif t == 0 and p == 0:
+            TN += 1
+        elif t == 1 and p == 0:
+            FN += 1
+    return TP, FP, TN, FN
+
+def precision_recall_f1(y_true, y_pred):
+    TP, FP, TN, FN = confusion_matrix(y_true, y_pred)
+    # avoid division by zero
+    prec = TP / (TP + FP) if (TP + FP) > 0 else 0.0
+    rec  = TP / (TP + FN) if (TP + FN) > 0 else 0.0
+    if (prec + rec) == 0:
+        f1 = 0.0
+    else:
+        f1 = 2 * (prec * rec) / (prec + rec)
+    return prec, rec, f1
+
+def balanced_accuracy(y_true, y_pred):
+    TP, FP, TN, FN = confusion_matrix(y_true, y_pred)
+    # recall for positives
+    recall_pos = TP / (TP + FN) if (TP + FN) > 0 else 0.0
+    # recall for negatives
+    recall_neg = TN / (TN + FP) if (TN + FP) > 0 else 0.0
+    return 0.5 * (recall_pos + recall_neg)
+
 def main():
     import argparse
     parser = argparse.ArgumentParser()
@@ -247,6 +280,16 @@ def main():
     test_acc = logmodel.accuracy(X_test_bias, test_ds.Y)
     print(f"Test accuracy: {test_acc:.4f}")
     logmodel.plotModel()
+
+    preds = logmodel.predictMany(X_test_bias)
+    TP, FP, TN, FN = confusion_matrix(y_test, preds)
+    prec, rec, f1 = precision_recall_f1(y_test, preds)
+    bal_acc = balanced_accuracy(y_test, preds)
+
+    print("Confusion Matrix: TP={}, FP={}, TN={}, FN={}".format(TP, FP, TN, FN))
+    print("Precision = {:.4f}, Recall = {:.4f}, F1 = {:.4f}".format(prec, rec, f1))
+    print("Balanced Accuracy = {:.4f}".format(bal_acc))
+
 
 if __name__ == '__main__':
     main()
