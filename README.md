@@ -47,7 +47,7 @@
 
 ```bash
 
-pip install pandas chardet
+pip install pandas chardet scipy
 
 ```
 
@@ -55,6 +55,6 @@ pip install pandas chardet
 
 ```bash
 
-conda install -c conda-forge pandas chardet
+conda install -c conda-forge pandas chardet scipy
 
 ```
