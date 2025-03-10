@@ -8,6 +8,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
+import re
+
 from random import shuffle
 
 class Dataset:
@@ -86,22 +88,52 @@ class Dataset:
     # ----------------------------------------------------------------
     # New static/class methods to handle text merging & BOW
     # ----------------------------------------------------------------
+    def clean_text(string):
+        # remove punctuation
+        string = re.sub(r"[^\w\s]", "", string)
+        # remove digits
+        string = re.sub(r"\d+", "", string)
+        # lower is already done
+        return string.strip()
+
     def load_data(input_path, output_path, sep="\t"):
+        # read input and output csv's
         df_input = pd.read_csv(input_path, sep=sep)
         df_output = pd.read_csv(output_path, sep=sep)
+        # handle rows thet might have an empty Text or missing Label
+        df_input.dropna(subset=["ID", "Text"], inplace=True)
+        df_output.dropna(subset=["ID", "Label"], inplace=True)
+        # remove duplicated ID's
+        df_input.drop_duplicates(subset=["ID"], inplace=True)
+        df_output.drop_duplicates(subset=["ID"], inplace=True)
+        # merge datasets on ID column
         df_merged = pd.merge(df_input, df_output, on="ID")
         return df_merged
 
-    def build_vocab(texts):
+    def build_vocab(texts, max_vocab_size=None, min_freq=2):
         """
-        Builds a bag-of-words vocabulary from the list of texts (train portion).
-        Returns a dict: {token: index}.
+        Build a vocabulary with an optional maximum size, plus a minimum frequency threshold.
+        If max_vocab_size is None, we keep all tokens above min_freq.
         """
-        vocab = {}
+        from collections import Counter
+        token_counter = Counter()
         for txt in texts:
             for tok in txt.lower().split():
-                if tok not in vocab:
-                    vocab[tok] = len(vocab)
+                token_counter[tok] += 1
+
+        # remove tokens below min_freq
+        filtered = [(token, freq) for token, freq in token_counter.items() if freq >= min_freq]
+
+        # sort by frequency descending
+        filtered.sort(key=lambda x: x[1], reverse=True)
+
+        # if max_vocab_size is not None, truncate
+        if max_vocab_size is not None:
+            filtered = filtered[:max_vocab_size]
+
+        vocab = {}
+        for i, (token, freq) in enumerate(filtered):
+            vocab[token] = i
         return vocab
 
     def vectorize_text_bow(texts, vocab):
@@ -163,7 +195,7 @@ class Dataset:
 
         return df_train, df_test, y_train, y_test
 
-    def prepare_train_test_bow(input_csv, output_csv, test_size=0.2, random_state=42, sep="\t"):
+    def prepare_train_test_bow(input_csv, output_csv, test_size=0.2, random_state=42, max_vocab_size=None, min_freq=48, sep="\t"):
         """
         Merges input_csv and output_csv by ID into a single DataFrame.
         Splits that data into train/test sets by 'test_size' proportion.
@@ -176,19 +208,20 @@ class Dataset:
         # Load merged data
         df_merged = Dataset.load_data(input_csv, output_csv, sep=sep)
 
+        # Clean the text column
+        df_merged["Text"] = df_merged["Text"].apply(Dataset.clean_text)
+
         # Convert label "Human"/"AI" to 0/1
         labels = np.where(df_merged["Label"] == "AI", 1.0, 0.0)
 
         # Split into train/test
         #    df_train, df_test have columns: [ID, Text, Label]
         #    y_train, y_test are arrays of shape (n_samples,)
-        df_train, df_test, y_train, y_test = Dataset.train_test_split_custom(
-            df_merged, labels, test_size=test_size, random_state=random_state, shuffle=True
-        )
+        df_train, df_test, y_train, y_test = Dataset.train_test_split_custom(df_merged, labels, test_size=test_size, random_state=random_state, shuffle=True)
 
         # Build vocab from the train portion only
         train_texts = df_train["Text"].astype(str).tolist()
-        vocab = Dataset.build_vocab(train_texts)
+        vocab = Dataset.build_vocab(train_texts, max_vocab_size=max_vocab_size, min_freq=min_freq)
 
         # Vectorize train texts
         X_train = Dataset.vectorize_text_bow(train_texts, vocab)
