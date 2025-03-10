@@ -6,6 +6,7 @@
 Usage Example:
 --------------
 $ python logistic_regression_model.py --input_csv ../tarefa_1/clean_input_datasets/dataset1_inputs.csv --output_csv ../tarefa_1/clean_output_datasets/dataset1_outputs.csv
+$ python logistic_regression_model.py --input_csv ../tarefa_1/clean_input_datasets/gpt_vs_human_data_set_inputs.csv --output_csv ../tarefa_1/clean_output_datasets/gpt_vs_human_data_set_outputs.csv
 """
 
 import numpy as np
@@ -35,7 +36,7 @@ class LogisticRegression:
 
     def buildModel(self):
         if self.regularization:
-            self.optim_model_reg(self.lamda)
+            self.optim_model_reg()
         else:
             self.optim_model()
 
@@ -58,11 +59,11 @@ class LogisticRegression:
                                                initial_theta,
                                                **options)
 
-    def optim_model_reg(self, lamda):
+    def optim_model_reg(self):
         from scipy import optimize
         n = self.X.shape[1]
         initial_theta = np.ones(n)
-        result = optimize.minimize(lambda theta: self.costFunctionReg(theta, lamda),
+        result = optimize.minimize(lambda theta: self.costFunctionReg(theta, self.lamda),
                                    initial_theta,
                                    method='BFGS',
                                    options={"maxiter":500, "disp":False})
@@ -211,20 +212,14 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--input_csv", required=True, help="CSV for training input (ID, Text)")
     parser.add_argument("--output_csv", required=True, help="CSV for training output (ID, Label)")
-    parser.add_argument("--regularization", default=True, help="Use L2 regularization approach")
+    parser.add_argument("--regularization", default=False, help="Use L2 regularization approach")
     parser.add_argument("--lamda", type=float, default=10, help="Lambda for L2 regularization")
     parser.add_argument("--alpha", type=float, default=0.001, help="Learning rate for gradient descent")
     parser.add_argument("--iters", type=int, default=40000, help="Iterations for gradient descent")
     args = parser.parse_args()
 
     # Load Datasets
-    X_train, y_train, X_test, y_test, vocab = Dataset.prepare_train_test_bow(
-        input_csv=args.input_csv,
-        output_csv=args.output_csv,
-        test_size=0.3,
-        random_state=42,
-        sep="\t"
-    )
+    X_train, y_train, X_test, y_test, vocab = Dataset.prepare_train_test_bow(input_csv=args.input_csv, output_csv=args.output_csv, test_size=0.3, random_state=42, max_vocab_size=None, min_freq=52, sep="\t")
 
     # Wrap Dataset object
     train_ds = Dataset(X=X_train, Y=y_train)
