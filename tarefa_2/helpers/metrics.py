@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+"""
+@author: miguelrocha
+(Adapted by: Grupo 03)
+"""
 
 import numpy as np
-
 
 def accuracy(y_true, y_pred):
  
