@@ -14,6 +14,7 @@ from helpers.losses import LossFunction, MeanSquaredError, BinaryCrossEntropy
 from helpers.optimizer import Optimizer
 from helpers.metrics import accuracy, mse
 from helpers.dataset import Dataset
+from helpers.regularizer import L1Regularizer
 
 class NeuralNetwork:
  
