@@ -16,6 +16,7 @@ import matplotlib.pyplot as plt
 
 from helpers.dataset import Dataset
 from helpers.model import load_model, save_model
+from helpers.metrics import confusion_matrix, balanced_accuracy, precision_recall_f1
 
 class LogisticRegression:
     
@@ -137,12 +138,6 @@ class LogisticRegression:
     def printCoefs(self):
         print(self.theta)
 
-    def mapX(self):
-        self.origX = self.X.copy()
-        mapX = mapFeature(self.X[:,1], self.X[:,2], 6)
-        self.X = np.hstack((np.ones([self.X.shape[0],1]), mapX) )
-        self.theta = np.zeros(self.X.shape[1])
-
     def plotModel(self):
         from numpy import r_
         pos = (self.y == 1).nonzero()[:1]
@@ -164,69 +159,23 @@ class LogisticRegression:
 def sigmoid(x):
     return 1 / (1 + np.exp(-x))
 
-def mapFeature(X1, X2, degrees = 6):
-    out = np.ones( (np.shape(X1)[0], 1) )
-    for i in range(1, degrees+1):
-        for j in range(0, i+1):
-            term1 = X1 ** (i-j)
-            term2 = X2 ** (j)
-            term  = (term1 * term2).reshape( np.shape(term1)[0], 1 )
-            out   = np.hstack(( out, term ))
-    return out
-
-def confusion_matrix(y_true, y_pred):
-    # y_true, y_pred: arrays of 0 or 1
-    TP = FP = TN = FN = 0
-    for t, p in zip(y_true, y_pred):
-        if t == 1 and p == 1:
-            TP += 1
-        elif t == 0 and p == 1:
-            FP += 1
-        elif t == 0 and p == 0:
-            TN += 1
-        elif t == 1 and p == 0:
-            FN += 1
-    return TP, FP, TN, FN
-
-def precision_recall_f1(y_true, y_pred):
-    TP, FP, TN, FN = confusion_matrix(y_true, y_pred)
-    # avoid division by zero
-    prec = TP / (TP + FP) if (TP + FP) > 0 else 0.0
-    rec  = TP / (TP + FN) if (TP + FN) > 0 else 0.0
-    if (prec + rec) == 0:
-        f1 = 0.0
-    else:
-        f1 = 2 * (prec * rec) / (prec + rec)
-    return prec, rec, f1
-
-def balanced_accuracy(y_true, y_pred):
-    TP, FP, TN, FN = confusion_matrix(y_true, y_pred)
-    # recall for positives
-    recall_pos = TP / (TP + FN) if (TP + FN) > 0 else 0.0
-    # recall for negatives
-    recall_neg = TN / (TN + FP) if (TN + FP) > 0 else 0.0
-    return 0.5 * (recall_pos + recall_neg)
-
 def classify_texts(input_csv, output_csv, model_prefix="logreg_model"):
     """
     Load model and vocab, then classify a new CSV with columns [ID, Text].
     """
-    # 1) read new data
-    df_new = pd.read_csv(input_csv, sep="\t")  # or your delimiter
-    # 2) load model
+    df_new = pd.read_csv(input_csv, sep="\t")
     theta, vocab = load_model(model_prefix)
-    # 3) vectorize
+    # vectorize
     texts = df_new["Text"].astype(str).tolist()
     X_new = Dataset.vectorize_text_bow(texts, vocab)
-    # 4) add bias
+    # add bias
     X_bias = np.hstack([np.ones((X_new.shape[0], 1)), X_new])
-    # 5) compute probabilities
+    # compute probabilities
     p = sigmoid(np.dot(X_bias, theta))
-    # 6) threshold at 0.5 => AI if >= 0.5, else Human
+    # threshold at 0.5 => AI if >= 0.5, else Human
     pred_bin = np.where(p >= 0.5, 1, 0)
-    # 7) map 0->Human, 1->AI
+    # map 0->Human, 1->AI
     pred_str = np.where(pred_bin == 1, "AI", "Human")
-    # 8) save results
     df_out = pd.DataFrame({
         "ID": df_new["ID"],
         "Label": pred_str
@@ -293,7 +242,6 @@ def main():
         print("Balanced Accuracy = {:.4f}".format(bal_acc))
 
     elif args.mode == "classify":
-        # use the function classify_texts
         classify_texts(args.input_csv, args.output_csv, model_prefix=args.model_prefix)
     else:
         parser.print_help()
