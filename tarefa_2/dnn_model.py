@@ -149,7 +149,7 @@ def main():
 
     n_features = train_ds.X.shape[1]
 
-    net.add(DenseLayer(16, (n_features,)))
+    net.add(DenseLayer(16, (n_features,), dropout_rate=0.4))
     net.add(SigmoidActivation())
     net.add(DenseLayer(1))
     net.add(SigmoidActivation())
