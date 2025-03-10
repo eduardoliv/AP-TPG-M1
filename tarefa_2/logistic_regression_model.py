@@ -219,7 +219,7 @@ def main():
     args = parser.parse_args()
 
     # Load Datasets
-    X_train, y_train, X_test, y_test, vocab = Dataset.prepare_train_test_bow(input_csv=args.input_csv, output_csv=args.output_csv, test_size=0.3, random_state=42, max_vocab_size=None, min_freq=52, sep="\t")
+    X_train, y_train, X_test, y_test, vocab = Dataset.prepare_train_test_bow(input_csv=args.input_csv, output_csv=args.output_csv, test_size=0.3, random_state=42, max_vocab_size=None, min_freq=16, sep="\t")
 
     # Wrap Dataset object
     train_ds = Dataset(X=X_train, Y=y_train)
