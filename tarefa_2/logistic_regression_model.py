@@ -209,8 +209,8 @@ def main():
     parser.add_argument("--model_prefix", default="logreg_model", help="Prefix for saving/loading the model files.")
     parser.add_argument("--test_size", type=float, default=0.3)
     parser.add_argument("--regularization", default=True, help="Use L2 regularization approach")
-    parser.add_argument("--lamda", type=float, default=10, help="Lambda for L2 regularization")
-    parser.add_argument("--alpha", type=float, default=0.001, help="Learning rate for gradient descent")
+    parser.add_argument("--lamda", type=float, default=1.0, help="Lambda for L2 regularization")
+    parser.add_argument("--alpha", type=float, default=0.0005, help="Learning rate for gradient descent")
     parser.add_argument("--iters", type=int, default=40000, help="Iterations for gradient descent")
     args = parser.parse_args()
 
