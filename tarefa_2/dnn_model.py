@@ -14,6 +14,7 @@ from helpers.losses import LossFunction, MeanSquaredError, BinaryCrossEntropy
 from helpers.optimizer import Optimizer
 from helpers.metrics import accuracy, mse
 from helpers.dataset import Dataset
+from helpers.regularizer import L1Regularizer
 
 class NeuralNetwork:
  
@@ -149,7 +150,7 @@ def main():
 
     n_features = train_ds.X.shape[1]
 
-    net.add(DenseLayer(16, (n_features,)))
+    net.add(DenseLayer(16, (n_features,), dropout_rate=0.4))
     net.add(SigmoidActivation())
     net.add(DenseLayer(1))
     net.add(SigmoidActivation())

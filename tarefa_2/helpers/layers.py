@@ -37,22 +37,24 @@ class Layer(metaclass=ABCMeta):
         return self.__class__.__name__
     
 
-class DenseLayer (Layer):
+class DenseLayer(Layer):
     
-    def __init__(self, n_units, input_shape = None):
+    def __init__(self, n_units, input_shape=None, dropout_rate=0.0, kernel_regularizer=None, bias_regularizer=None):
         super().__init__()
         self.n_units = n_units
         self._input_shape = input_shape
-
+        self.dropout_rate = dropout_rate  # Add dropout rate
+        self.kernel_regularizer = kernel_regularizer
+        self.bias_regularizer = bias_regularizer
+        
         self.input = None
         self.output = None
         self.weights = None
         self.biases = None
-        
+        self.dropout_mask = None  # Store the dropout mask
+
     def initialize(self, optimizer):
-        # initialize weights from a 0 centered uniform distribution [-0.5, 0.5)
         self.weights = np.random.rand(self.input_shape()[0], self.n_units) - 0.5
-        # initialize biases to 0
         self.biases = np.zeros((1, self.n_units))
         self.w_opt = copy.deepcopy(optimizer)
         self.b_opt = copy.deepcopy(optimizer)
@@ -61,31 +63,34 @@ class DenseLayer (Layer):
     def parameters(self):
         return np.prod(self.weights.shape) + np.prod(self.biases.shape)
 
-    def forward_propagation(self, inputs, training):
+    def forward_propagation(self, inputs, training=True):
         self.input = inputs
         self.output = np.dot(self.input, self.weights) + self.biases
+        
+        if training and self.dropout_rate > 0:
+            self.dropout_mask = (np.random.rand(*self.output.shape) >= self.dropout_rate).astype(np.float32)
+            self.output *= self.dropout_mask  # Apply dropout by zeroing out some neurons
+        elif not training and self.dropout_rate > 0:
+            self.output *= (1.0 - self.dropout_rate)  # Scale outputs during inference
+            
         return self.output
  
     def backward_propagation(self, output_error):
-        # computes the layer input error (the output error from the previous layer),
-        # dE/dX, to pass on to the previous layer
-        # SHAPES: (batch_size, input_columns) = (batch_size, output_columns) * (output_columns, input_columns)
-        input_error = np.dot(output_error, self.weights.T)
+        if self.dropout_rate > 0:
+            output_error *= self.dropout_mask  # Apply the same dropout mask during backpropagation
     
-        # computes the weight error: dE/dW = X.T * dE/dY
-        # SHAPES: (input_columns, output_columns) = (input_columns, batch_size) * (batch_size, output_columns)
+        input_error = np.dot(output_error, self.weights.T)
         weights_error = np.dot(self.input.T, output_error)
-        
-        # computes the bias error: dE/dB = dE/dY
-        # SHAPES: (1, output_columns) = SUM over the rows of a matrix of shape (batch_size, output_columns)
         bias_error = np.sum(output_error, axis=0, keepdims=True)
 
-        # updates parameters
+        if self.kernel_regularizer:
+            weights_error += self.kernel_regularizer(self.weights)
+        if self.bias_regularizer:
+            bias_error += self.bias_regularizer(self.biases)
+
         self.weights = self.w_opt.update(self.weights, weights_error)
         self.biases = self.b_opt.update(self.biases, bias_error)
         return input_error
  
     def output_shape(self):
         return (self.n_units,) 
-
-    
