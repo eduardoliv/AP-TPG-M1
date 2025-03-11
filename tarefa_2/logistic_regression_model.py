@@ -209,8 +209,8 @@ def main():
     parser.add_argument("--model_prefix", default="logreg_model", help="Prefix for saving/loading the model files.")
     parser.add_argument("--test_size", type=float, default=0.3)
     parser.add_argument("--regularization", default=True, help="Use L2 regularization approach")
-    parser.add_argument("--lamda", type=float, default=1.0, help="Lambda for L2 regularization")
-    parser.add_argument("--alpha", type=float, default=0.0005, help="Learning rate for gradient descent")
+    parser.add_argument("--lamda", type=float, default=0.5, help="Lambda for L2 regularization")
+    parser.add_argument("--alpha", type=float, default=0.001, help="Learning rate for gradient descent")
     parser.add_argument("--iters", type=int, default=40000, help="Iterations for gradient descent")
     args = parser.parse_args()
 
@@ -247,7 +247,6 @@ def main():
         X_test_bias = np.hstack((ones_test, test_ds.X))
         test_acc = logmodel.accuracy(X_test_bias, test_ds.Y)
         print(f"Test accuracy: {test_acc:.4f}")
-        logmodel.plotModel()
 
         preds = logmodel.predictMany(X_test_bias)
         TP, FP, TN, FN = confusion_matrix(y_test, preds)
@@ -257,6 +256,7 @@ def main():
         print("Confusion Matrix: TP={}, FP={}, TN={}, FN={}".format(TP, FP, TN, FN))
         print("Precision = {:.4f}, Recall = {:.4f}, F1 = {:.4f}".format(prec, rec, f1))
         print("Balanced Accuracy = {:.4f}".format(bal_acc))
+        logmodel.plotModel()
 
     elif args.mode == "classify":
         classify_texts(args.input_csv, args.output_csv, model_prefix=args.model_prefix)
