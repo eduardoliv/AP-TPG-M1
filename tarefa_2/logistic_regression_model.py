@@ -8,6 +8,7 @@ Usage Example:
 $ python logistic_regression_model.py train --input_csv ../tarefa_1/clean_input_datasets/dataset1_inputs.csv --output_csv ../tarefa_1/clean_output_datasets/dataset1_outputs.csv
 $ python logistic_regression_model.py train --input_csv ../tarefa_1/clean_input_datasets/gpt_vs_human_data_set_inputs.csv --output_csv ../tarefa_1/clean_output_datasets/gpt_vs_human_data_set_outputs.csv
 $ python logistic_regression_model.py classify --input_csv ../tarefa_1/clean_input_datasets/dataset2_inputs.csv --output_csv ../tarefa_1/classify_output_datasets/dataset2_outputs.csv
+$ python logistic_regression_model.py classify --input_csv ../tarefa_1/clean_input_datasets/dataset1_inputs.csv --output_csv ../tarefa_1/classify_output_datasets/dataset1_outputs.csv
 """
 
 import numpy as np
@@ -43,14 +44,27 @@ class LogisticRegression:
             self.optim_model()
 
     def gradientDescent(self, alpha = 0.01, iters = 10000):
+        """
+        Gradient Descent with optional L2 regularization.
+        """
         m = self.X.shape[0]
         n = self.X.shape[1]
         self.theta = np.zeros(n)
         for its in range(iters):
-            J = self.costFunction()
-            if its%1000 == 0: print(J)
-            delta = self.X.T.dot(sigmoid(self.X.dot(self.theta)) - self.y)
-            self.theta -= (alpha /m  * delta )
+            # predicted probabilities
+            p = sigmoid(self.X.dot(self.theta))  # shape (m,)
+            # gradient from cross-entropy ## delta shape => (n,)
+            delta = self.X.T.dot(p - self.y)  # X.T: (n,m), (p-y): (m,)
+            # if L2 reg is on, add lambda * theta for j>=1
+            if self.regularization and self.lamda > 0:
+                # do not penalize the bias: index 0
+                delta[1:] += self.lamda * self.theta[1:]
+            # update theta
+            self.theta -= (alpha / m) * delta
+            # print cost every 1000 iterations
+            if its % 1000 == 0:
+                cost_val = self.costFunction()
+                print(f"Iter={its}, cost={cost_val:.10f}")
 
     def optim_model(self):
         from scipy import optimize
@@ -124,6 +138,10 @@ class LogisticRegression:
         # total cost is cost1 + cost2, then averaged over m
         cost = cost1 + cost2
         J = cost / m
+        # if using L2, add penalty
+        if self.regularization and self.lamda > 0:
+            # do not penalize bias
+            J += (self.lamda / (2.0 * m)) * np.sum(theta[1:]**2)
         return J
 
     def costFunctionReg(self, theta = None, lamda = 1):
@@ -198,7 +216,7 @@ def main():
 
     if args.mode == "train":
         # Load Datasets
-        X_train, y_train, X_test, y_test, vocab = Dataset.prepare_train_test_bow(input_csv=args.input_csv, output_csv=args.output_csv, test_size=args.test_size, random_state=42, max_vocab_size=None, min_freq=16, sep="\t")
+        X_train, y_train, X_test, y_test, vocab = Dataset.prepare_train_test_bow(input_csv=args.input_csv, output_csv=args.output_csv, test_size=args.test_size, max_vocab_size=None, min_freq=16)
 
         # Wrap Dataset object
         train_ds = Dataset(X=X_train, Y=y_train)
