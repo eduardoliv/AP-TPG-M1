@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import re
 
+from collections import Counter
 from random import shuffle
 
 class Dataset:
@@ -90,38 +91,31 @@ class Dataset:
     # ----------------------------------------------------------------
     def vectorize_text_bow(texts, vocab):
         """
-        Vectorizes a list of texts into a BOW matrix (n_samples, vocab_size).
-        If a token isn't in vocab, it's ignored.
+        Vectorizes a list of texts into a Bag-of-Words matrix (n_samples, vocab_size).
         """
-        X_list = []
-        for txt in texts:
-            row = np.zeros(len(vocab), dtype=float)
-            for tok in txt.lower().split():
-                if tok in vocab:
-                    row[vocab[tok]] += 1.0
-            X_list.append(row)
-        return np.array(X_list)
+        vocab_size = len(vocab)
+        X = np.zeros((len(texts), vocab_size), dtype=float)
+        for i, txt in enumerate(texts):
+            # Split text into tokens
+            tokens = txt.split()
+            # Map tokens to indices (ignoring tokens not in vocab)
+            indices = [vocab[token] for token in tokens if token in vocab]
+            if indices:
+                # Use np.bincount to count occurrences of each index; ensure length equals vocab_size
+                X[i, :] = np.bincount(indices, minlength=vocab_size)
+        return X
 
     def prepare_train_test_bow(input_csv, output_csv, test_size=0.2, random_state=42, max_vocab_size=None, min_freq=48, sep="\t"):
         """
-        Merges input_csv and output_csv by ID into a single DataFrame.
-        Splits that data into train/test sets by 'test_size' proportion.
-        Builds a vocabulary from the *train* portion only and vectorizes
-        train and test texts using a bag-of-words representation.
-        Converts labels "AI"/"Human" to 1.0/0.0 respectively.
-
-        Returns: X_train, y_train, X_test, y_test, vocab
+        Loads and merges input/output CSV files, cleans text using vectorized pandas methods,
+        splits data into train/test sets, builds a vocabulary from the training texts, and
+        vectorizes texts using a bag-of-words representation.
         """
-        import pandas as pd
-        import numpy as np
-        import re
-        from collections import Counter
 
-        # --- Data Loading and Merging ---
-        # Read the input and output CSV files.
+        # Data Loading and Merging
         df_input = pd.read_csv(input_csv, sep=sep)
         df_output = pd.read_csv(output_csv, sep=sep)
-        
+
         # Drop rows with missing values and duplicate IDs.
         df_input.dropna(subset=["ID", "Text"], inplace=True)
         df_output.dropna(subset=["ID", "Label"], inplace=True)
@@ -131,22 +125,24 @@ class Dataset:
         # Merge the two DataFrames on the "ID" column.
         df_merged = pd.merge(df_input, df_output, on="ID")
 
-        # --- Text Cleaning ---
-        def clean_text(string):
-            # Remove punctuation and digits, then trim whitespace.
-            string = re.sub(r"[^\w\s]", "", string)
-            string = re.sub(r"\d+", "", string)
-            return string.strip()
+        # Text Cleaning: use pandas vectorized string methods with regex to remove punctuation and digits.
+        df_merged["Text"] = (df_merged["Text"]
+                            .str.replace(r"[^\w\s]", "", regex=True)
+                            .str.replace(r"\d+", "", regex=True)
+                            .str.strip()
+                            .str.lower())
         
-        df_merged["Text"] = df_merged["Text"].apply(clean_text)
-        
-        # --- Label Conversion ---
-        # Map "AI" to 1.0 and everything else (e.g., "Human") to 0.0.
-        labels = np.where(df_merged["Label"] == "AI", 1.0, 0.0)
-        
-        # --- Train/Test Split ---
+        # Label Conversion: Map "AI" to 1.0 and "Human" to 0.0 (case-insensitive)
+        labels = df_merged["Label"].str.lower().str.strip().map({"ai": 1.0, "human": 0.0})
+
+        # Assert that there are no missing values after mapping
+        assert labels.notna().all(), "Some labels are not recognized as either 'AI' or 'Human'."
+
+        # Train/Test Split.
         n_samples = len(df_merged)
         indices = np.arange(n_samples)
+
+        # Shuffle indices and split based on test_size.
         if random_state is not None:
             np.random.seed(random_state)
         np.random.shuffle(indices)
@@ -159,35 +155,23 @@ class Dataset:
         y_train = labels[train_idx]
         y_test  = labels[test_idx]
         
-        # --- Vocabulary Building ---
         # Build vocabulary using only the training texts.
         train_texts = df_train["Text"].astype(str).tolist()
         token_counter = Counter()
         for txt in train_texts:
-            for tok in txt.lower().split():
-                token_counter[tok] += 1
+            token_counter.update(txt.split())
 
-        # Filter tokens by minimum frequency.
+       # Filter tokens by minimum frequency and sort them by frequency.
         filtered = [(token, freq) for token, freq in token_counter.items() if freq >= min_freq]
         filtered.sort(key=lambda x: x[1], reverse=True)
         if max_vocab_size is not None:
             filtered = filtered[:max_vocab_size]
         vocab = {token: i for i, (token, _) in enumerate(filtered)}
         
-        # --- Vectorization (Bag-of-Words) ---
-        def vectorize_text_bow(texts, vocab):
-            X_list = []
-            for txt in texts:
-                row = np.zeros(len(vocab), dtype=float)
-                for tok in txt.lower().split():
-                    if tok in vocab:
-                        row[vocab[tok]] += 1.0
-                X_list.append(row)
-            return np.array(X_list)
-        
-        X_train = vectorize_text_bow(train_texts, vocab)
+        # Vectorization (Bag-of-Words)
+        X_train = Dataset.vectorize_text_bow(train_texts, vocab)
         test_texts = df_test["Text"].astype(str).tolist()
-        X_test = vectorize_text_bow(test_texts, vocab)
+        X_test = Dataset.vectorize_text_bow(test_texts, vocab)
         
         return X_train, y_train, X_test, y_test, vocab
     
