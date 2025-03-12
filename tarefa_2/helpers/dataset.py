@@ -8,9 +8,13 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
+import re
+import nltk
 
 from collections import Counter
 from random import shuffle
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize
 
 class Dataset:
     def __init__(self, filename=None, X=None, Y=None, ids=None):
@@ -86,7 +90,31 @@ class Dataset:
         plt.show()
 
     # ----------------------------------------------------------------
-    # New static/class methods to handle text merging & BOW
+    # New class methods to handle text cleaning
+    # ----------------------------------------------------------------
+    def clean_text(text):
+        nltk.download('stopwords')
+        # Convert to lowercase
+        text = text.lower()
+        # Remove URLs
+        text = re.sub(r'http[s]?://\S+', '', text)
+        # Remove email addresses
+        text = re.sub(r'\S+@\S+', '', text)
+        # Remove punctuation and digits
+        text = re.sub(r"[^\w\s]", "", text)
+        text = re.sub(r"\d+", "", text)
+        # Remove extra whitespace
+        text = re.sub(r"\s+", " ", text).strip()
+        # Remove stopwords using NLTK's English stopwords list
+        stop_words = set(stopwords.words('english'))
+        tokens = word_tokenize(text)
+        # Filter tokens that are not stopwords
+        filtered_sentence = [token for token in tokens if token not in stop_words]
+        # Return the cleaned text as a string
+        return " ".join(filtered_sentence)
+
+    # ----------------------------------------------------------------
+    # New class methods to handle text merging & BOW
     # ----------------------------------------------------------------
     def vectorize_text_bow(texts, vocab):
         """
@@ -124,12 +152,8 @@ class Dataset:
         # Merge the two DataFrames on the "ID" column.
         df_merged = pd.merge(df_input, df_output, on="ID")
 
-        # Text Cleaning: use pandas vectorized string methods with regex to remove punctuation and digits.
-        df_merged["Text"] = (df_merged["Text"]
-                            .str.replace(r"[^\w\s]", "", regex=True)
-                            .str.replace(r"\d+", "", regex=True)
-                            .str.strip()
-                            .str.lower())
+        # Text Cleaning.
+        df_merged["Text"] = df_merged["Text"].apply(Dataset.clean_text)
         
         # Label Conversion: Map "AI" to 1.0 and "Human" to 0.0 (case-insensitive).
         labels = np.where(df_merged["Label"].str.lower().str.strip() == "ai", 1.0,
@@ -176,7 +200,7 @@ class Dataset:
         return X_train, y_train, X_test, y_test, vocab
     
     # ----------------------------------------------------------------
-    # New static/class methods to handle text merging & Tokenization
+    # New class methods to handle text merging & Tokenization
     # ----------------------------------------------------------------
     def create_train_dataset(train_input_csv, train_output_csv, max_len=None, sep="\t"):
         """

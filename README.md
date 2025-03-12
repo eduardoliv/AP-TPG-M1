@@ -53,7 +53,7 @@
 
 ```bash
 
-pip install pandas chardet scipy
+pip install pandas chardet scipy nltk
 
 ```
 
@@ -61,6 +61,6 @@ pip install pandas chardet scipy
 
 ```bash
 
-conda install -c conda-forge pandas chardet scipy
+conda install -c conda-forge pandas chardet scipy nltk
 
 ```
