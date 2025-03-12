@@ -8,7 +8,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
-import re
 
 from collections import Counter
 from random import shuffle
@@ -132,11 +131,12 @@ class Dataset:
                             .str.strip()
                             .str.lower())
         
-        # Label Conversion: Map "AI" to 1.0 and "Human" to 0.0 (case-insensitive)
-        labels = df_merged["Label"].str.lower().str.strip().map({"ai": 1.0, "human": 0.0})
+        # Label Conversion: Map "AI" to 1.0 and "Human" to 0.0 (case-insensitive).
+        labels = np.where(df_merged["Label"].str.lower().str.strip() == "ai", 1.0,
+                        np.where(df_merged["Label"].str.lower().str.strip() == "human", 0.0, np.nan))
 
         # Assert that there are no missing values after mapping
-        assert labels.notna().all(), "Some labels are not recognized as either 'AI' or 'Human'."
+        assert not np.isnan(labels).any(), "Some labels are not recognized as either 'AI' or 'Human'."
 
         # Train/Test Split.
         n_samples = len(df_merged)
