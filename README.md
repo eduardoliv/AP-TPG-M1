@@ -17,26 +17,32 @@
 ```md
 
 / (Root)
-├── tarefa_1  
-│   ├── clean_input_datasets            (Uniformized input datasets)
-│   ├── clean_output_datasets           (Uniformized output datasets)
-│   ├── original_input_datasets         (Original input datasets)
-│   └── original_output_datasets        (Original output datasets)
-│   └── clean_pipeline.py               (Code for cleaning and normalizing datasets)
-├── tarefa_2
-│   ├── logistic_regression_model.py    (Logistic Regression Model)
-│   ├── dnn_model.py                    (Deep Neural Network Model)
-│   ├── rnn_model.py                    (Recurrent Neural Network Model)
-│   └── helpers/                        (Code Utilities: Dataset, Activation, Layers, Losses, Metrics and Optimizers)
-|       ├── dataset.py
+├── tarefa_1/
+│   ├── classify_output_datasets            (Classified output datasets)
+│   ├── clean_input_datasets                (Uniformized input datasets)
+│   ├── clean_output_datasets               (Uniformized output datasets)
+│   ├── original_input_datasets             (Original input datasets)
+│   ├── original_output_datasets            (Original output datasets)
+│   └── clean_pipeline.py                   (Code for cleaning and normalizing datasets)
+├── tarefa_2/
+│   ├── logistic_regression_model.ipynb     (Logistic Regression Model Notebook)
+│   ├── dnn_model.py                        (Deep Neural Network Model)
+│   ├── rnn_model.py                        (Recurrent Neural Network Model)
+│   ├── models/                             (Code Models used on the Jupyter Notebooks)
+|   |   └── logistic_regression_model.py
+│   └── helpers/                            (Code Utilities used on the Models)
 │       ├── activation.py
+|       ├── dataset.py
+│       ├── enums.py
 │       ├── layers.py
 │       ├── losses.py
 │       ├── metrics.py
-│       └── optimizer.py
-├── tarefa_3
+│       ├── models.py
+│       ├── optimizer.py
+│       └── regularizer.py
+├── tarefa_3/
 |   └── Work-in-Progress
-└── tarefa_4
+└── tarefa_4/
     └── Work-in-Progress
 
 ```
