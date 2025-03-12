@@ -9,6 +9,7 @@ import glob
 import pandas as pd
 import chardet
 import csv
+import string
 
 def detect_file_encoding(file_path):
     with open(file_path, 'rb') as f:
@@ -17,6 +18,11 @@ def detect_file_encoding(file_path):
     return result['encoding']
 
 def clean_dataset_pipeline(file_path, output_path, sep, encoding, id_column, text_label_column, human_value, ai_value, is_output=False):
+    def clean_text(text):
+        # Remove punctuation and convert to lowercase
+        text = text.translate(str.maketrans('', '', string.punctuation))
+        return text.lower()
+        
     input_encoding = encoding
     if encoding.lower() == "auto":
         input_encoding = detect_file_encoding(file_path)
@@ -34,7 +40,7 @@ def clean_dataset_pipeline(file_path, output_path, sep, encoding, id_column, tex
         )
     else:
         df = df.rename(columns={id_column: "ID", text_label_column: "Text"})
-        df["Text"] = df["Text"].astype(str).str.strip()
+        df["Text"] = [clean_text(df["Text"][i]) for i in range(len(df["Text"]))]
     
     df.to_csv(output_path, sep=sep, index=False, encoding="utf-8", quoting=csv.QUOTE_NONE,)
 
