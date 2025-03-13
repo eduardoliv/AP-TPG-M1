@@ -5,11 +5,7 @@
 """
 
 import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
-
-from helpers.dataset import Dataset
-from helpers.model import load_model
 
 class LogisticRegression:
     
@@ -188,27 +184,3 @@ def hyperparameter_tuning(train_ds, val_ds, alphas, lambdas, iters_list):
                     best_acc = val_acc
                     best_params = {"alpha": alpha, "lamda": lamda, "iters": iters}
     return best_params, best_acc, results
-
-def classify_texts(input_csv, output_csv, model_prefix="logreg_model"):
-    """
-    Load model and vocab, then classify a new CSV with columns [ID, Text].
-    """
-    df_new = pd.read_csv(input_csv, sep="\t")
-    theta, vocab = load_model(model_prefix)
-    # vectorize
-    texts = df_new["Text"].astype(str).tolist()
-    X_new = Dataset.vectorize_text_bow(texts, vocab)
-    # add bias
-    X_bias = np.hstack([np.ones((X_new.shape[0], 1)), X_new])
-    # compute probabilities
-    p = sigmoid(np.dot(X_bias, theta))
-    # threshold at 0.5 => AI if >= 0.5, else Human
-    pred_bin = np.where(p >= 0.5, 1, 0)
-    # map 0->Human, 1->AI
-    pred_str = np.where(pred_bin == 1, "AI", "Human")
-    df_out = pd.DataFrame({
-        "ID": df_new["ID"],
-        "Label": pred_str
-    })
-    df_out.to_csv(output_csv, sep="\t", index=False)
-    print(f"Predictions saved to {output_csv}")
