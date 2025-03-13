@@ -2,12 +2,6 @@
 """
 @author: miguelrocha
 (Adapted by: Grupo 03)
-
-Usage Example:
---------------
-$ python logistic_regression_model.py train --input_csv ../tarefa_1/clean_input_datasets/dataset1_inputs.csv --output_csv ../tarefa_1/clean_output_datasets/dataset1_outputs.csv
-$ python logistic_regression_model.py train --input_csv ../tarefa_1/clean_input_datasets/gpt_vs_human_data_set_inputs.csv --output_csv ../tarefa_1/clean_output_datasets/gpt_vs_human_data_set_outputs.csv
-$ python logistic_regression_model.py classify --input_csv ../tarefa_1/clean_input_datasets/dataset2_inputs.csv --output_csv ../tarefa_1/classify_output_datasets/dataset2_outputs.csv
 """
 
 import numpy as np
@@ -15,8 +9,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 from helpers.dataset import Dataset
-from helpers.model import load_model, save_model
-from helpers.metrics import confusion_matrix, balanced_accuracy, precision_recall_f1
+from helpers.model import load_model
 
 class LogisticRegression:
     
@@ -43,14 +36,27 @@ class LogisticRegression:
             self.optim_model()
 
     def gradientDescent(self, alpha = 0.01, iters = 10000):
+        """
+        Gradient Descent with optional L2 regularization.
+        """
         m = self.X.shape[0]
         n = self.X.shape[1]
         self.theta = np.zeros(n)
         for its in range(iters):
-            J = self.costFunction()
-            if its%1000 == 0: print(J)
-            delta = self.X.T.dot(sigmoid(self.X.dot(self.theta)) - self.y)
-            self.theta -= (alpha /m  * delta )
+            # predicted probabilities
+            p = sigmoid(self.X.dot(self.theta))  # shape (m,)
+            # gradient from cross-entropy ## delta shape => (n,)
+            delta = self.X.T.dot(p - self.y)  # X.T: (n,m), (p-y): (m,)
+            # if L2 reg is on, add lambda * theta for j>=1
+            if self.regularization and self.lamda > 0:
+                # do not penalize the bias: index 0
+                delta[1:] += self.lamda * self.theta[1:]
+            # update theta
+            self.theta -= (alpha / m) * delta
+            # print cost every 1000 iterations
+            if its % 1000 == 0:
+                cost_val = self.costFunction()
+                print(f"Iter={its}, cost={cost_val:.10f}")
 
     def optim_model(self):
         from scipy import optimize
@@ -114,7 +120,6 @@ class LogisticRegression:
                                 + (1 - y)^T * log((1 - p) + epsilon) ]
         """
         if theta is None: theta = self.theta
-        # number of samples
         m = self.X.shape[0]
         # predicted probabilities p = sigmoid(X * theta)
         p = sigmoid(np.dot(self.X, theta))
@@ -125,6 +130,10 @@ class LogisticRegression:
         # total cost is cost1 + cost2, then averaged over m
         cost = cost1 + cost2
         J = cost / m
+        # if using L2, add penalty
+        if self.regularization and self.lamda > 0:
+            # do not penalize bias
+            J += (self.lamda / (2.0 * m)) * np.sum(theta[1:]**2)
         return J
 
     def costFunctionReg(self, theta = None, lamda = 1):
@@ -182,69 +191,3 @@ def classify_texts(input_csv, output_csv, model_prefix="logreg_model"):
     })
     df_out.to_csv(output_csv, sep="\t", index=False)
     print(f"Predictions saved to {output_csv}")
-
-def main():
-    import argparse
-    parser = argparse.ArgumentParser()
-    parser.add_argument("mode", choices=["train", "classify"], help="Choose 'train' to train a new model, 'classify' to predict on new data.")
-    parser.add_argument("--input_csv", required=True, help="CSV for training input (ID, Text)")
-    parser.add_argument("--output_csv", required=True, help="CSV for training output (ID, Label) or File Name to save predictions")
-    parser.add_argument("--model_prefix", default="logreg_model", help="Prefix for saving/loading the model files.")
-    parser.add_argument("--test_size", type=float, default=0.3)
-    parser.add_argument("--regularization", default=True, help="Use L2 regularization approach")
-    parser.add_argument("--lamda", type=float, default=10, help="Lambda for L2 regularization")
-    parser.add_argument("--alpha", type=float, default=0.001, help="Learning rate for gradient descent")
-    parser.add_argument("--iters", type=int, default=40000, help="Iterations for gradient descent")
-    args = parser.parse_args()
-
-    if args.mode == "train":
-        # Load Datasets
-        X_train, y_train, X_test, y_test, vocab = Dataset.prepare_train_test_bow(input_csv=args.input_csv, output_csv=args.output_csv, test_size=args.test_size, random_state=42, max_vocab_size=None, min_freq=16, sep="\t")
-
-        # Wrap Dataset object
-        train_ds = Dataset(X=X_train, Y=y_train)
-        test_ds = Dataset(X=X_test, Y=y_test)
-
-        # Validate Train and Test dataset division
-        print(f"Train set has {train_ds.nrows()} rows and {train_ds.ncols()} columns")
-        print(f"Test set has {test_ds.nrows()} rows and {test_ds.ncols()} columns\n")
-
-        # Build logistic regression model
-        logmodel = LogisticRegression(train_ds, regularization=args.regularization, lamda=args.lamda)
-
-        # Simple gradient descent
-        logmodel.gradientDescent(alpha=args.alpha, iters=args.iters)
-
-        # Save the model
-        save_model(logmodel.theta, vocab, args.model_prefix)
-        print(f"Model saved with prefix {args.model_prefix}")
-
-        # Evaluate Train Accuracy
-        ones_train = np.ones((train_ds.X.shape[0], 1))
-        X_train_bias = np.hstack((ones_train, train_ds.X))
-        train_acc = logmodel.accuracy(X_train_bias, train_ds.Y)
-        print(f"Train accuracy: {train_acc:.4f}")
-
-        # Evaluate Test Accuracy
-        ones_test = np.ones((test_ds.X.shape[0], 1))
-        X_test_bias = np.hstack((ones_test, test_ds.X))
-        test_acc = logmodel.accuracy(X_test_bias, test_ds.Y)
-        print(f"Test accuracy: {test_acc:.4f}")
-        logmodel.plotModel()
-
-        preds = logmodel.predictMany(X_test_bias)
-        TP, FP, TN, FN = confusion_matrix(y_test, preds)
-        prec, rec, f1 = precision_recall_f1(y_test, preds)
-        bal_acc = balanced_accuracy(y_test, preds)
-
-        print("Confusion Matrix: TP={}, FP={}, TN={}, FN={}".format(TP, FP, TN, FN))
-        print("Precision = {:.4f}, Recall = {:.4f}, F1 = {:.4f}".format(prec, rec, f1))
-        print("Balanced Accuracy = {:.4f}".format(bal_acc))
-
-    elif args.mode == "classify":
-        classify_texts(args.input_csv, args.output_csv, model_prefix=args.model_prefix)
-    else:
-        parser.print_help()
-
-if __name__ == '__main__':
-    main()
