@@ -168,6 +168,27 @@ class LogisticRegression:
 def sigmoid(x):
     return 1 / (1 + np.exp(-x))
 
+def hyperparameter_tuning(train_ds, val_ds, alphas, lambdas, iters_list):
+    best_acc = 0
+    best_params = {}
+    results = []
+    for alpha in alphas:
+        for lamda in lambdas:
+            for iters in iters_list:
+                # Initialize model with given hyperparameters
+                model = LogisticRegression(train_ds, regularization=(lamda > 0), lamda=lamda)
+                model.gradientDescent(alpha=alpha, iters=iters)
+                # Evaluate on validation set
+                ones_val = np.ones((val_ds.X.shape[0], 1))
+                X_val_bias = np.hstack((ones_val, val_ds.X))
+                val_acc = model.accuracy(X_val_bias, val_ds.Y)
+                results.append((alpha, lamda, iters, val_acc))
+                print(f"alpha: {alpha}, lamda: {lamda}, iters: {iters} -> Validation Accuracy: {val_acc:.4f}")
+                if val_acc > best_acc:
+                    best_acc = val_acc
+                    best_params = {"alpha": alpha, "lamda": lamda, "iters": iters}
+    return best_params, best_acc, results
+
 def classify_texts(input_csv, output_csv, model_prefix="logreg_model"):
     """
     Load model and vocab, then classify a new CSV with columns [ID, Text].

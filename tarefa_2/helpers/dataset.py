@@ -90,10 +90,11 @@ class Dataset:
         plt.show()
 
     # ----------------------------------------------------------------
-    # New class methods to handle text cleaning
+    # New class methods to perform text Cleaning and Tokenization
     # ----------------------------------------------------------------
     def clean_text(text):
-        nltk.download('stopwords')
+        # Download stop words from nltk
+        nltk.download('stopwords', quiet=True)
         # Convert to lowercase
         text = text.lower()
         # Remove URLs
