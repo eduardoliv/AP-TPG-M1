@@ -95,6 +95,7 @@ class Dataset:
     def clean_text(text):
         # Download stop words from nltk
         nltk.download('stopwords', quiet=True)
+        nltk.download('punkt_tab', quiet=True)
         # Convert to lowercase
         text = text.lower()
         # Remove URLs
