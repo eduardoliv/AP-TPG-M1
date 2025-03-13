@@ -9,8 +9,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 import re
+import nltk
 
+from collections import Counter
 from random import shuffle
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize
 
 class Dataset:
     def __init__(self, filename=None, X=None, Y=None, ids=None):
@@ -86,152 +90,120 @@ class Dataset:
         plt.show()
 
     # ----------------------------------------------------------------
-    # New static/class methods to handle text merging & BOW
+    # New class methods to perform text Cleaning and Tokenization
     # ----------------------------------------------------------------
-    def clean_text(string):
-        # remove punctuation
-        string = re.sub(r"[^\w\s]", "", string)
-        # remove digits
-        string = re.sub(r"\d+", "", string)
-        # lower is already done
-        return string.strip()
+    def clean_text(text):
+        # Download stop words from nltk
+        nltk.download('stopwords', quiet=True)
+        nltk.download('punkt_tab', quiet=True)
+        # Convert to lowercase
+        text = text.lower()
+        # Remove URLs
+        text = re.sub(r'http[s]?://\S+', '', text)
+        # Remove email addresses
+        text = re.sub(r'\S+@\S+', '', text)
+        # Remove punctuation and digits
+        text = re.sub(r"[^\w\s]", "", text)
+        text = re.sub(r"\d+", "", text)
+        # Remove extra whitespace
+        text = re.sub(r"\s+", " ", text).strip()
+        # Remove stopwords using NLTK's English stopwords list
+        stop_words = set(stopwords.words('english'))
+        tokens = word_tokenize(text)
+        # Filter tokens that are not stopwords
+        filtered_sentence = [token for token in tokens if token not in stop_words]
+        # Return the cleaned text as a string
+        return " ".join(filtered_sentence)
 
-    def load_data(input_path, output_path, sep="\t"):
-        # read input and output csv's
-        df_input = pd.read_csv(input_path, sep=sep)
-        df_output = pd.read_csv(output_path, sep=sep)
-        # handle rows thet might have an empty Text or missing Label
-        df_input.dropna(subset=["ID", "Text"], inplace=True)
-        df_output.dropna(subset=["ID", "Label"], inplace=True)
-        # remove duplicated ID's
-        df_input.drop_duplicates(subset=["ID"], inplace=True)
-        df_output.drop_duplicates(subset=["ID"], inplace=True)
-        # merge datasets on ID column
-        df_merged = pd.merge(df_input, df_output, on="ID")
-        return df_merged
-
-    def build_vocab(texts, max_vocab_size=None, min_freq=2):
-        """
-        Build a vocabulary with an optional maximum size, plus a minimum frequency threshold.
-        If max_vocab_size is None, we keep all tokens above min_freq.
-        """
-        from collections import Counter
-        token_counter = Counter()
-        for txt in texts:
-            for tok in txt.lower().split():
-                token_counter[tok] += 1
-
-        # remove tokens below min_freq
-        filtered = [(token, freq) for token, freq in token_counter.items() if freq >= min_freq]
-
-        # sort by frequency descending
-        filtered.sort(key=lambda x: x[1], reverse=True)
-
-        # if max_vocab_size is not None, truncate
-        if max_vocab_size is not None:
-            filtered = filtered[:max_vocab_size]
-
-        vocab = {}
-        for i, (token, freq) in enumerate(filtered):
-            vocab[token] = i
-        return vocab
-
+    # ----------------------------------------------------------------
+    # New class methods to handle text merging & BOW
+    # ----------------------------------------------------------------
     def vectorize_text_bow(texts, vocab):
         """
-        Vectorizes a list of texts into a BOW matrix (n_samples, vocab_size).
-        If a token isn't in vocab, it's ignored.
+        Vectorizes a list of texts into a Bag-of-Words matrix (n_samples, vocab_size).
         """
-        X_list = []
-        for txt in texts:
-            row = np.zeros(len(vocab), dtype=float)
-            for tok in txt.lower().split():
-                if tok in vocab:
-                    row[vocab[tok]] += 1.0
-            X_list.append(row)
-        return np.array(X_list)
-
-    def train_test_split_custom(df, labels, test_size=0.2, random_state=None, shuffle=True):
-        """
-        Splits 'df' and 'labels' into train/test subsets with proportion 'test_size' for test.
-
-        Parameters
-        ----------
-        df : pd.DataFrame
-            The merged DataFrame containing at least [ID, Text, Label] or other columns.
-        labels : np.ndarray
-            Array of shape (n_samples,) with numeric labels (0/1 or otherwise).
-        test_size : float
-            Proportion of the dataset to include in the test split (0 < test_size < 1).
-        random_state : int or None
-            Seed for the random generator. If None, uses current NumPy RNG state.
-        shuffle : bool
-            Whether to shuffle the data before splitting.
-
-        Returns
-        -------
-        df_train : pd.DataFrame
-        df_test  : pd.DataFrame
-        y_train  : np.ndarray
-        y_test   : np.ndarray
-        """
-        n_samples = len(df)
-        indices = np.arange(n_samples)
-
-        # Optional random seeding
-        if random_state is not None:
-            np.random.seed(random_state)
-
-        if shuffle:
-            np.random.shuffle(indices)
-
-        n_test = int(test_size * n_samples)
-        test_idx = indices[:n_test]
-        train_idx = indices[n_test:]
-
-        df_train = df.iloc[train_idx]
-        df_test = df.iloc[test_idx]
-        y_train = labels[train_idx]
-        y_test = labels[test_idx]
-
-        return df_train, df_test, y_train, y_test
+        vocab_size = len(vocab)
+        X = np.zeros((len(texts), vocab_size), dtype=float)
+        for i, txt in enumerate(texts):
+            # Split text into tokens
+            tokens = txt.split()
+            # Map tokens to indices (ignoring tokens not in vocab)
+            indices = [vocab[token] for token in tokens if token in vocab]
+            if indices:
+                # Use np.bincount to count occurrences of each index; ensure length equals vocab_size
+                X[i, :] = np.bincount(indices, minlength=vocab_size)
+        return X
 
     def prepare_train_test_bow(input_csv, output_csv, test_size=0.2, random_state=42, max_vocab_size=None, min_freq=48, sep="\t"):
         """
-        Merges input_csv and output_csv by ID into a single DataFrame.
-        Splits that data into train/test sets by 'test_size' proportion.
-        Builds a vocabulary from the *train* portion only.
-        Vectorizes train texts and test texts using that vocab.
-        Maps "Human"/"AI" => 0/1 labels.
-
-        Returns: X_train, y_train, X_test, y_test, vocab
+        Loads and merges input/output CSV files, cleans text using vectorized pandas methods,
+        splits data into train/test sets, builds a vocabulary from the training texts, and
+        vectorizes texts using a bag-of-words representation.
         """
-        # Load merged data
-        df_merged = Dataset.load_data(input_csv, output_csv, sep=sep)
 
-        # Clean the text column
+        # Data Loading and Merging
+        df_input = pd.read_csv(input_csv, sep=sep)
+        df_output = pd.read_csv(output_csv, sep=sep)
+
+        # Drop rows with missing values and duplicate IDs.
+        df_input.dropna(subset=["ID", "Text"], inplace=True)
+        df_output.dropna(subset=["ID", "Label"], inplace=True)
+        df_input.drop_duplicates(subset=["ID"], inplace=True)
+        df_output.drop_duplicates(subset=["ID"], inplace=True)
+        
+        # Merge the two DataFrames on the "ID" column.
+        df_merged = pd.merge(df_input, df_output, on="ID")
+
+        # Text Cleaning.
         df_merged["Text"] = df_merged["Text"].apply(Dataset.clean_text)
+        
+        # Label Conversion: Map "AI" to 1.0 and "Human" to 0.0 (case-insensitive).
+        labels = np.where(df_merged["Label"].str.lower().str.strip() == "ai", 1.0,
+                        np.where(df_merged["Label"].str.lower().str.strip() == "human", 0.0, np.nan))
 
-        # Convert label "Human"/"AI" to 0/1
-        labels = np.where(df_merged["Label"] == "AI", 1.0, 0.0)
+        # Assert that there are no missing values after mapping
+        assert not np.isnan(labels).any(), "Some labels are not recognized as either 'AI' or 'Human'."
 
-        # Split into train/test
-        #    df_train, df_test have columns: [ID, Text, Label]
-        #    y_train, y_test are arrays of shape (n_samples,)
-        df_train, df_test, y_train, y_test = Dataset.train_test_split_custom(df_merged, labels, test_size=test_size, random_state=random_state, shuffle=True)
+        # Train/Test Split.
+        n_samples = len(df_merged)
+        indices = np.arange(n_samples)
 
-        # Build vocab from the train portion only
+        # Shuffle indices and split based on test_size.
+        if random_state is not None:
+            np.random.seed(random_state)
+        np.random.shuffle(indices)
+        n_test = int(test_size * n_samples)
+        test_idx = indices[:n_test]
+        train_idx = indices[n_test:]
+        
+        df_train = df_merged.iloc[train_idx]
+        df_test  = df_merged.iloc[test_idx]
+        y_train = labels[train_idx]
+        y_test  = labels[test_idx]
+        
+        # Build vocabulary using only the training texts.
         train_texts = df_train["Text"].astype(str).tolist()
-        vocab = Dataset.build_vocab(train_texts, max_vocab_size=max_vocab_size, min_freq=min_freq)
+        token_counter = Counter()
+        for txt in train_texts:
+            token_counter.update(txt.split())
 
-        # Vectorize train texts
+       # Filter tokens by minimum frequency and sort them by frequency.
+        filtered = [(token, freq) for token, freq in token_counter.items() if freq >= min_freq]
+        filtered.sort(key=lambda x: x[1], reverse=True)
+        if max_vocab_size is not None:
+            filtered = filtered[:max_vocab_size]
+        vocab = {token: i for i, (token, _) in enumerate(filtered)}
+        
+        # Vectorization (Bag-of-Words)
         X_train = Dataset.vectorize_text_bow(train_texts, vocab)
-
-        # Vectorize test texts (using the *same* vocab)
         test_texts = df_test["Text"].astype(str).tolist()
         X_test = Dataset.vectorize_text_bow(test_texts, vocab)
-
+        
         return X_train, y_train, X_test, y_test, vocab
-
+    
+    # ----------------------------------------------------------------
+    # New class methods to handle text merging & Tokenization
+    # ----------------------------------------------------------------
     def create_train_dataset(train_input_csv, train_output_csv, max_len=None, sep="\t"):
         """
         Reads train_input_csv (ID,Text) and train_output_csv (ID,Label) line-by-line,

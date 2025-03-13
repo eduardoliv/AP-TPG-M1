@@ -35,8 +35,10 @@ def clean_dataset_pipeline(file_path, output_path, sep, encoding, id_column, tex
     else:
         df = df.rename(columns={id_column: "ID", text_label_column: "Text"})
         df["Text"] = df["Text"].astype(str).str.strip()
-    
-    df.to_csv(output_path, sep=sep, index=False, encoding="utf-8", quoting=csv.QUOTE_NONE,)
+        # Replace occurrences of multiple newlines (with possible whitespace in between) with a single newline
+        df['Text'] = df['Text'].str.replace(r'\n\s*\n', '\n', regex=True)
+
+    df.to_csv(output_path, sep=sep, index=False, encoding="utf-8", quoting=csv.QUOTE_MINIMAL)
 
 def process_files_in_directory(original_dir, clean_dir, is_output, sep, encoding, id_column, text_label_column, human_value=None, ai_value=None):
     if not os.path.exists(clean_dir):
