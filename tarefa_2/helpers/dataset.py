@@ -215,12 +215,12 @@ class Dataset:
         
         return X_train, y_train, X_test, y_test, vocab, idf
     
-    def classify_texts(input_csv, output_csv, model_prefix="logreg_model"):
+    def classify_texts(input_csv, output_csv, model_prefix="logreg_model", sep="\t"):
         """
         Load model, vocabulary, and idf vector; then classify a new CSV with columns [ID, Text].
         """
         # Read new data.
-        df_new = pd.read_csv(input_csv, sep="\t")
+        df_new = pd.read_csv(input_csv, sep=sep)
         
         # Load model parameters, vocabulary, and IDF vector.
         theta, vocab, idf = load_model(model_prefix)
