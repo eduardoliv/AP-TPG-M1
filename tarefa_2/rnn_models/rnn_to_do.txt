@@ -1,0 +1,22 @@
+TO DO
+
+- meter a main a aceitar flags, --train e --test
+
+    --train para treinar o modelo
+        exemplo: --train input_csv output_csv nome_do_modelo
+            nome_do_modelo -> nome do ficheiro onde o modelo vai ser guardado (.pkl) 50ep_vect_t.pkl
+
+    --test para testar o modelo
+        exemplo: --test input_csv output_csv nome_do_modelo
+            dá print a metricas importantes, como accuracy e f1 score, 
+            quando compara as estimativas do input, com o output esperado
+                para além de dar print era bom meter a escrever os resultados 
+                automáticamente num documento, por exemplo txt, onde metia os 
+                hiperparametros utilizados, as metricas e tudo o que se achar 
+                necessário, para assim termos um documento a controlar a evolução
+
+
+
+
+----- fazer a nossa implementacao do f1 score
+
