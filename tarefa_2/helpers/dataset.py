@@ -101,14 +101,24 @@ class Dataset:
         # Convert to lowercase
         text = text.lower()
         # Remove URLs
-        text = re.sub(r'http[s]?://\S+', '', text)
+        text = re.sub(r'http[s]?://\S+', "", text)
+        # Remove HTML tags
+        text = re.sub(r"<[^>]*>", "", text)
+        # remove common LaTeX commands
+        text = re.sub(r"\\[a-zA-Z]+(\{.*?\})?", "", text)
         # Remove email addresses
-        text = re.sub(r'\S+@\S+', '', text)
-        # Remove punctuation and digits
+        text = re.sub(r'\S+@\S+', "", text)
+        # Remove punctuation
         text = re.sub(r"[^\w\s]", "", text)
+        # Remove  digits
         text = re.sub(r"\d+", "", text)
         # Remove extra whitespace
-        text = re.sub(r"\s+", " ", text).strip()
+        text = re.sub(r"\s+", " ", text)
+        # Remove new line
+        text = text.replace('\n', " ")
+        text = re.sub(r'\s+', " ", text)
+        # Trim
+        text = text.strip()
         # Remove stopwords using NLTK's English stopwords list
         stop_words = set(stopwords.words('english'))
         tokens = word_tokenize(text)
@@ -118,7 +128,7 @@ class Dataset:
         return " ".join(filtered_sentence)
 
     # ----------------------------------------------------------------
-    # New class methods to handle text merging, TF-IDF & BOW
+    # New class methods to handle TF-IDF & BOW
     # ----------------------------------------------------------------
     def vectorize_text_bow(texts, vocab):
         """
@@ -138,28 +148,117 @@ class Dataset:
 
     def vectorize_text_tfidf(texts, vocab, idf=None):
         """
-        Vectorizes a list of texts into a TF-IDF matrix using the provided vocabulary.
-        If an idf vector is provided, it uses that vector; otherwise, it computes idf from the texts.
-        Returns a tuple: (tfidf_matrix, idf_vector)
+        Build raw term-frequency matrix for each text
+        If idf is None, compute IDF from train data
+        Return TF-IDF matrix & idf array
         """
-        # Get the raw bag-of-words count matrix.
-        X_counts = Dataset.vectorize_text_bow(texts, vocab)
-        # If no idf vector is provided, compute it from the current texts.
+        n_docs = len(texts)
+        n_vocab = len(vocab)
+
+        # Raw counts
+        counts = np.zeros((n_docs, n_vocab), dtype=float)
+        for i, txt in enumerate(texts):
+            for token in txt.split():
+                if token in vocab:
+                    j = vocab[token]
+                    counts[i, j] += 1.0
+
+        # TF = counts / sum_of_counts
+        row_sums = np.sum(counts, axis=1, keepdims=True)
+        row_sums[row_sums == 0] = 1.0  # avoid division by zero
+        tf = counts / row_sums
+
+        # IDF
         if idf is None:
-            n_docs = X_counts.shape[0]
-            df = np.sum(X_counts > 0, axis=0)
-            idf = np.log((n_docs + 1) / (df + 1)) + 1
-        # Multiply each count by its corresponding idf weight.
-        X_tfidf = X_counts * idf
-        return X_tfidf, idf
+            # doc frequency
+            dfreq = np.sum(counts > 0, axis=0)
+            # avoid log(0)
+            dfreq[dfreq == 0] = 1
+            idf = np.log((n_docs / dfreq))
+
+        # TF-IDF
+        tf_idf = tf * idf
+        return tf_idf, idf
+
+    def prepare_train_test_tfidf(input_csv, output_csv, test_size=0.2, random_state=42, max_vocab_size=None, min_freq=2, sep="\t"):
+        """
+        Loads and merges input/output CSVs on ID
+        Cleans text
+        Splits data into train/test
+        Builds vocabulary from train portion only
+        Computes TF-IDF features for train/test
+        """
+
+        # Data Loading and Merging
+        df_input = pd.read_csv(input_csv, sep=sep)
+        df_output = pd.read_csv(output_csv, sep=sep)
+
+        # Drop rows with missing values and duplicates.
+        df_input.dropna(subset=["ID", "Text"], inplace=True)
+        df_output.dropna(subset=["ID", "Label"], inplace=True)
+        df_input.drop_duplicates(subset=["ID"], inplace=True)
+        df_output.drop_duplicates(subset=["ID"], inplace=True)
+
+        # Merge on ID.
+        df_merged = pd.merge(df_input, df_output, on="ID")
+
+        # Clean text.
+        df_merged["Text"] = df_merged["Text"].apply(Dataset.clean_text)
+
+        # Map labels: "AI" to 1.0, "Human" to 0.0.
+        labels = np.where(
+            df_merged["Label"].str.lower().str.strip() == "ai", 1.0,
+            np.where(
+                df_merged["Label"].str.lower().str.strip() == "human", 0.0, np.nan
+            )
+        )
+        if np.isnan(labels).any():
+            raise ValueError("Some labels aren't recognized as 'AI' or 'Human'.")
+
+        # Shuffle indices and split based on test_size.
+        n_samples = len(df_merged)
+        indices = np.arange(n_samples)
+        if random_state is not None:
+            np.random.seed(random_state)
+        np.random.shuffle(indices)
+        n_test = int(test_size * n_samples)
+        test_idx = indices[:n_test]
+        train_idx = indices[n_test:]
+
+        df_train = df_merged.iloc[train_idx]
+        df_test  = df_merged.iloc[test_idx]
+        y_train = labels[train_idx]
+        y_test  = labels[test_idx]
+
+        # Build vocabulary using only the training texts.
+        train_texts = df_train["Text"].astype(str).tolist()
+        token_counter = Counter()
+        for txt in train_texts:
+            token_counter.update(txt.split())
+
+        # Filter tokens by minimum frequency and sort them by frequency.
+        filtered = [(tok, freq) for tok, freq in token_counter.items() if freq >= min_freq]
+
+        # Sort descending by freq.
+        filtered.sort(key=lambda x: x[1], reverse=True)
+        if max_vocab_size is not None:
+            filtered = filtered[:max_vocab_size]
+        vocab = {token: i for i, (token, _) in enumerate(filtered)}
+
+        # TF-IDF features for train & test.
+        X_train, idf = Dataset.vectorize_text_tfidf(train_texts, vocab)
+        X_test, _ = Dataset.vectorize_text_tfidf(df_test["Text"].astype(str).tolist(), vocab, idf)
+
+        return X_train, y_train, X_test, y_test, vocab, idf
 
     def prepare_train_test_bow(input_csv, output_csv, test_size=0.2, random_state=42, max_vocab_size=None, min_freq=48, sep="\t"):
         """
-        Loads and merges input/output CSV files, cleans text,
-        splits data into train/test sets, builds a vocabulary from the training texts,
-        and vectorizes texts using a TF-IDF representation.
+        Loads and merges input/output CSV files, cleans text using vectorized pandas methods,
+        splits data into train/test sets, builds a vocabulary from the training texts, and
+        vectorizes texts using a bag-of-words representation.
         """
-        # Load data.
+
+        # Data Loading and Merging
         df_input = pd.read_csv(input_csv, sep=sep)
         df_output = pd.read_csv(output_csv, sep=sep)
 
@@ -179,10 +278,12 @@ class Dataset:
         labels = np.where(df_merged["Label"].str.lower().str.strip() == "ai", 1.0,
                           np.where(df_merged["Label"].str.lower().str.strip() == "human", 0.0, np.nan))
         assert not np.isnan(labels).any(), "Some labels are not recognized as either 'AI' or 'Human'."
-        
+
         # Train/Test Split.
         n_samples = len(df_merged)
         indices = np.arange(n_samples)
+
+        # Shuffle indices and split based on test_size.
         if random_state is not None:
             np.random.seed(random_state)
         np.random.shuffle(indices)
@@ -194,31 +295,34 @@ class Dataset:
         df_test  = df_merged.iloc[test_idx]
         y_train = labels[train_idx]
         y_test  = labels[test_idx]
-
-        # Build vocabulary from training texts.
+        
+        # Build vocabulary using only the training texts.
         train_texts = df_train["Text"].astype(str).tolist()
         token_counter = Counter()
         for txt in train_texts:
             token_counter.update(txt.split())
+
+       # Filter tokens by minimum frequency and sort them by frequency.
         filtered = [(token, freq) for token, freq in token_counter.items() if freq >= min_freq]
+
+        # Sort descending by freq.
         filtered.sort(key=lambda x: x[1], reverse=True)
         if max_vocab_size is not None:
             filtered = filtered[:max_vocab_size]
         vocab = {token: i for i, (token, _) in enumerate(filtered)}
         
-        # Compute TF-IDF features on training texts.
-        X_train, idf = Dataset.vectorize_text_tfidf(train_texts, vocab)
-        
-        # Vectorize test texts using the same vocabulary and idf.
+        # Vectorization (Bag-of-Words).
+        X_train = Dataset.vectorize_text_bow(train_texts, vocab)
         test_texts = df_test["Text"].astype(str).tolist()
-        X_test, _ = Dataset.vectorize_text_tfidf(test_texts, vocab, idf=idf)
+        X_test = Dataset.vectorize_text_bow(test_texts, vocab)
         
-        return X_train, y_train, X_test, y_test, vocab, idf
+        return X_train, y_train, X_test, y_test, vocab
     
     def classify_texts(input_csv, output_csv, model_prefix="logreg_model", sep="\t"):
         """
         Load model, vocabulary, and idf vector; then classify a new CSV with columns [ID, Text].
         """
+        
         # Read new data.
         df_new = pd.read_csv(input_csv, sep=sep)
         
