@@ -16,6 +16,7 @@ from random import shuffle
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from helpers.model import load_model
+from helpers.math import Math
 
 class Dataset:
     def __init__(self, filename=None, X=None, Y=None, ids=None):
@@ -94,7 +95,7 @@ class Dataset:
     # New class methods to perform text Cleaning and Tokenization
     # ----------------------------------------------------------------
     def clean_text(text):
-        # Download stop words from nltk
+        # Download required nltk resources
         nltk.download('stopwords', quiet=True)
         nltk.download('punkt_tab', quiet=True)
         # Convert to lowercase
@@ -154,7 +155,7 @@ class Dataset:
 
     def prepare_train_test_bow(input_csv, output_csv, test_size=0.2, random_state=42, max_vocab_size=None, min_freq=48, sep="\t"):
         """
-        Loads and merges input/output CSV files, cleans text using pandas,
+        Loads and merges input/output CSV files, cleans text,
         splits data into train/test sets, builds a vocabulary from the training texts,
         and vectorizes texts using a TF-IDF representation.
         """
@@ -205,7 +206,7 @@ class Dataset:
             filtered = filtered[:max_vocab_size]
         vocab = {token: i for i, (token, _) in enumerate(filtered)}
         
-        # Use vectorize_text_tfidf to compute TF-IDF features on training texts.
+        # Compute TF-IDF features on training texts.
         X_train, idf = Dataset.vectorize_text_tfidf(train_texts, vocab)
         
         # Vectorize test texts using the same vocabulary and idf.
@@ -214,9 +215,6 @@ class Dataset:
         
         return X_train, y_train, X_test, y_test, vocab, idf
     
-    def sigmoid(x):
-        return 1 / (1 + np.exp(-x))
-
     def classify_texts(input_csv, output_csv, model_prefix="logreg_model"):
         """
         Load model, vocabulary, and idf vector; then classify a new CSV with columns [ID, Text].
@@ -237,7 +235,7 @@ class Dataset:
         X_bias = np.hstack([np.ones((X_new.shape[0], 1)), X_new])
         
         # Compute probabilities using the logistic (sigmoid) function.
-        p = Dataset.sigmoid(np.dot(X_bias, theta))
+        p = Math.sigmoid(np.dot(X_bias, theta))
         
         # Classify as "AI" if probability >= 0.5, else "Human".
         pred_bin = (p >= 0.5).astype(int)
@@ -252,7 +250,6 @@ class Dataset:
         # Save predictions.
         df_out.to_csv(output_csv, sep="\t", index=False)
         print(f"Predictions saved to {output_csv}")
-
 
     # ----------------------------------------------------------------
     # New class methods to handle text merging & Tokenization
