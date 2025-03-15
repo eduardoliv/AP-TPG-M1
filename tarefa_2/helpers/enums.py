@@ -12,3 +12,11 @@ class ModelRunMode(Enum):
     """
     TRAIN           = "train"           # Train Mode
     CLASSIFY        = "classify"        # Classify Mode
+
+class ModelType(Enum):
+    """
+    Enumeration of Model Types.
+    """
+    LOGREG = 1
+    DNN    = 2
+    RNN    = 3

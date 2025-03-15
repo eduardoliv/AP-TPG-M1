@@ -15,8 +15,9 @@ from collections import Counter
 from random import shuffle
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
-from helpers.model import load_model
+from helpers.model import load_model, load_dnn_model
 from helpers.math import Math
+from helpers.enums import ModelType
 
 class Dataset:
     def __init__(self, filename=None, X=None, Y=None, ids=None):
@@ -322,43 +323,62 @@ class Dataset:
         
         return X_train, y_train, X_test, y_test, vocab
     
-    def classify_texts(input_csv, output_csv, model_prefix="logreg_model", sep="\t"):
+    def classify_texts(input_csv, output_csv, neural_net_class=None, model_type: ModelType = ModelType.LOGREG, model_prefix="logreg_model", sep="\t"):
         """
-        Load a saved model (parameters, vocabulary, and IDF vector), 
-        clean and vectorize texts from a new CSV file, and classify them.
-        
-        Saves a new CSV file with columns [ID, Label] where Label is "AI" or "Human".
+        Classify new texts using a previously trained model (Logistic Regression, DNN, or RNN).
+
+        The CSV must have columns [ID, Text].
+        We will output a new CSV with columns [ID, Label].
+        Label is 'AI' or 'Human'.
         """
-        
         # Load new data for classification
         df_new = pd.read_csv(input_csv, sep=sep)
-        
-        # Load saved model parameters, vocabulary, and IDF vector
-        theta, vocab, idf = load_model(model_prefix)
-        
+
+        # No ID nor Text, no fun
+        if "ID" not in df_new.columns or "Text" not in df_new.columns:
+            raise ValueError("Input CSV must have 'ID' and 'Text' columns.")
+
         # Clean the text column to match training preprocessing
         texts = df_new["Text"].astype(str).apply(Dataset.clean_text).tolist()
+
+        # Branch on model_type
+        if model_type == ModelType.LOGREG:
+            theta, vocab, idf = load_model(model_prefix=model_prefix)
+            X_new, _ = Dataset.vectorize_text_tfidf(texts=texts, vocab=vocab, idf=idf)
+            # Add bias column
+            X_bias = np.hstack([np.ones((X_new.shape[0], 1)), X_new])
+            # Predictions
+            p = Math.sigmoid(np.dot(X_bias, theta))
+            pred_bin = (p >= 0.5).astype(int)
+
+        elif model_type == ModelType.DNN:
+            dnn_model, vocab, idf = load_dnn_model(neural_net_class=neural_net_class, model_prefix=model_prefix)
+            X_new, _ = Dataset.vectorize_text_tfidf(texts=texts, vocab=vocab, idf=idf)
+            # Predictions
+            p = dnn_model.predict(X_new)
+            pred_bin = (p >= 0.5).astype(int)
+            pred_bin = pred_bin.flatten()
+
+        elif model_type == ModelType.RNN:
+            # TODO:
+            # 1) load RNN model from disk
+            # rnn_model = load_rnn_model(model_prefix)
+            # 2) possibly reshape X_new for sequence-based input
+            # 3) get predictions from the RNN
+            #    p = rnn_model.predict(X_sequence)
+            # 4) threshold
+            pred_bin = (p >= 0.5).astype(int)
+
+        else:
+            raise ValueError(f"Unsupported model type: {model_type}")
         
-        # Vectorize texts using TF-IDF
-        X_new, _ = Dataset.vectorize_text_tfidf(texts, vocab, idf=idf)
-        
-        # Add a bias term (column of ones) to the feature matrix
-        X_bias = np.hstack([np.ones((X_new.shape[0], 1)), X_new])
-        
-        # Compute probabilities using the logistic sigmoid function
-        p = Math.sigmoid(np.dot(X_bias, theta))
-        
-        # Classify texts: probability >= 0.5 is "AI", otherwise "Human"
-        pred_bin = (p >= 0.5).astype(int)
+        # Convert 0->Human, 1->AI
         pred_str = np.where(pred_bin == 1, "AI", "Human")
         
         # Create and save the output DataFrame with IDs and predicted labels
-        df_out = pd.DataFrame({
-            "ID": df_new["ID"],
-            "Label": pred_str
-        })
-        df_out.to_csv(output_csv, sep="\t", index=False)
-        print(f"Predictions saved to {output_csv}")
+        df_out = pd.DataFrame({"ID": df_new["ID"], "Label": pred_str})
+        df_out.to_csv(output_csv, sep=sep, index=False)
+        print(f"[{model_type.name}] Predictions saved to {output_csv}")
 
     # ----------------------------------------------------------------
     # Helper functions for creating tokenized datasets with padding
