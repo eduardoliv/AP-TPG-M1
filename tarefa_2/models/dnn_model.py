@@ -6,15 +6,17 @@
 """
 
 import numpy as np
-import argparse
+import random
 
-from helpers.layers import DenseLayer
-from helpers.activation import SigmoidActivation
-from helpers.losses import LossFunction, MeanSquaredError, BinaryCrossEntropy
+from tqdm import tqdm
+
+from helpers.losses import LossFunction, MeanSquaredError
 from helpers.optimizer import Optimizer
-from helpers.metrics import accuracy, mse
+from helpers.metrics import mse, accuracy
 from helpers.dataset import Dataset
-from helpers.regularizer import L1Regularizer
+from helpers.layers import DenseLayer
+from helpers.activation import ReLUActivation, SigmoidActivation
+from helpers.losses import BinaryCrossEntropy
 
 class NeuralNetwork:
  
@@ -105,63 +107,92 @@ class NeuralNetwork:
         return self
 
     def predict(self, dataset):
-        return self.forward_propagation(dataset.X, training=False)
+        if isinstance(dataset, Dataset):
+            return self.forward_propagation(dataset.X, training=False)
+        
+        return self.forward_propagation(dataset, training=False)
 
     def score(self, dataset, predictions):
         if self.metric is not None:
             return self.metric(dataset.Y, predictions)
         else:
             raise ValueError("No metric specified for the neural network.")
+    
+def hyperparameter_optimization(train_ds, test_ds, epochs_list, batch_size_list, learning_rate_list, momentum_list, hidden_layers_list, dropout_list, n_iter=10):
 
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--input_csv", required=True, help="Path to input CSV (ID, Text)")
-    parser.add_argument("--output_csv", required=True, help="Path to output CSV (ID, Label)")
-    parser.add_argument("--epochs", type=int, default=100, help="Number of training epochs (Default: 100)")
-    parser.add_argument("--batch_size", type=int, default=6, help="Mini-batch size (Default: 6)")
-    parser.add_argument("--learning_rate", type=float, default=0.01, help="Learning rate (Default: 0.01)")
-    parser.add_argument("--momentum", type=float, default=0.9, help="Momentum (Default: 0.9)")
-    parser.add_argument("--bptt_trunc", type=int, default=1, help="Truncation steps for BPTT (Default: 1)")
-    parser.add_argument("--verbose", default=True, help="Print training details (Default: True)")
-    args = parser.parse_args()
+    best_acc = 0.0
+    best_params = {}
 
-    # Load Datasets
-    X_train, y_train, X_test, y_test, vocab = Dataset.prepare_train_test_bow(
-        input_csv=args.input_csv,
-        output_csv=args.output_csv,
-        test_size=0.2,
-        random_state=42,
-        sep="\t"
-    )
+    # Prepare random combinations
+    param_combinations = []
+    for _ in range(n_iter):
+        # Randomly choose one value from each list
+        epochs_val = random.choice(epochs_list)
+        batch_size_val = random.choice(batch_size_list)
+        lr_val = random.choice(learning_rate_list)
+        momentum_val = random.choice(momentum_list)
+        hidden_val = random.choice(hidden_layers_list)
+        dropout_val = random.choice(dropout_list)
 
-    # Wrap them in Dataset objects for convenience
-    train_ds = Dataset(X=X_train, Y=y_train)
-    test_ds = Dataset(X=X_test, Y=y_test)
+        param_combinations.append({
+            'epochs': epochs_val,
+            'batch_size': batch_size_val,
+            'learning_rate': lr_val,
+            'momentum': momentum_val,
+            'n_hidden': hidden_val,
+            'dropout_rate': dropout_val
+        })
 
-    # Create and configure the network
-    net = NeuralNetwork(
-        epochs=args.epochs,
-        batch_size=args.batch_size,
-        optimizer=Optimizer(learning_rate=args.learning_rate, momentum= args.momentum),
-        verbose=args.verbose,
-        loss=BinaryCrossEntropy,  # binary classification
-        metric=accuracy
-    )
+    # Evaluate each combination
+    for params in tqdm(param_combinations, desc="Hyperparameter Search"):
+        # Unpack the parameters
+        epochs = params['epochs']
+        batch_size = params['batch_size']
+        learning_rate = params['learning_rate']
+        momentum = params['momentum']
+        n_hidden = params['n_hidden']
+        dropout_rate = params['dropout_rate']
 
-    n_features = train_ds.X.shape[1]
+        # Build the network
+        net = NeuralNetwork(
+            epochs=epochs,
+            batch_size=batch_size,
+            optimizer=Optimizer(learning_rate=learning_rate, momentum=momentum),
+            verbose=False,
+            loss=BinaryCrossEntropy,  # binary classification
+            metric=accuracy
+        )
 
-    net.add(DenseLayer(16, (n_features,), dropout_rate=0.4))
-    net.add(SigmoidActivation())
-    net.add(DenseLayer(1))
-    net.add(SigmoidActivation())
+        # Construct layers
+        n_features = train_ds.X.shape[1]
 
-    # Train
-    net.fit(train_ds)
+        # Add hidden layers
+        for i, units in enumerate(n_hidden):
+            if i == 0:
+                net.add(DenseLayer(n_units=units, input_shape=(n_features,), dropout_rate=dropout_rate))
+            else:
+                net.add(DenseLayer(n_units=units, dropout_rate=dropout_rate))
+            net.add(ReLUActivation())
 
-    # test
-    out = net.predict(test_ds)
-    test_acc = net.score(test_ds, out)
-    print(f"Test accuracy: {test_acc:.4f}")
+        # Final output layer: 1 unit + Sigmoid
+        net.add(DenseLayer(1))
+        net.add(SigmoidActivation())
 
-if __name__ == "__main__":
-    main()
+        # Train on train_ds
+        net.fit(train_ds)
+
+        # Evaluate on test_ds
+        predictions = net.predict(test_ds)
+        val_acc = net.score(test_ds, predictions)
+
+        # Print results for debugging
+        print(f"Parameters: {params}  |  Accuracy: {val_acc:.4f}")
+
+        # Update best if improved
+        if val_acc > best_acc:
+            best_acc = val_acc
+            best_params = params
+
+    print("\nBest Hyperparameters Found:", best_params)
+    print(f"Best Accuracy: {best_acc:.4f}")
+    return best_params
