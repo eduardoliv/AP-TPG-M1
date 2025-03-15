@@ -18,32 +18,26 @@
 
 / (Root)
 ├── tarefa_1/
-│   ├── classify_output_datasets            (Classified output datasets)
-│   ├── clean_input_datasets                (Uniformized input datasets)
-│   ├── clean_output_datasets               (Uniformized output datasets)
-│   ├── original_input_datasets             (Original input datasets)
-│   ├── original_output_datasets            (Original output datasets)
-│   └── clean_pipeline.py                   (Code for cleaning and normalizing datasets)
+│   ├── clean_input_datasets               (Cleaned and uniformized input datasets)
+│   ├── clean_output_datasets              (Cleaned and uniformized output datasets)
+│   ├── original_input_datasets            (Original input datasets)
+│   ├── original_output_datasets           (Original output datasets)
+│   └── clean_pipeline.py                  (Script for cleaning and normalizing datasets)
 ├── tarefa_2/
-│   ├── logistic_regression_model.ipynb     (Logistic Regression Model Notebook)
-│   ├── dnn_model.py                        (Deep Neural Network Model)
-│   ├── rnn_model.py                        (Recurrent Neural Network Model)
-│   ├── models/                             (Code Models used on the Jupyter Notebooks)
-|   |   └── logistic_regression_model.py
-│   └── helpers/                            (Code Utilities used on the Models)
-│       ├── activation.py
-|       ├── dataset.py
-│       ├── enums.py
-│       ├── layers.py
-│       ├── losses.py
-│       ├── metrics.py
-│       ├── models.py
-│       ├── optimizer.py
-│       └── regularizer.py
+│   ├── classify_input_datasets            (Input datasets for classification)
+│   ├── classify_output_datasets           (Output datasets for classified results)
+│   ├── lr_model_weights/                  (Logistic Regression model weights)
+│   ├── logistic_regression_model.ipynb    (Notebook for the Logistic Regression model)
+│   ├── dnn_model.ipynb                    (Notebook for the Deep Neural Network model)
+│   ├── rnn_model.py                       (Recurrent Neural Network model)
+│   ├── models/                            (Code models used in the notebooks)
+│   │   ├── dnn_model.py
+│   │   └── logistic_regression_model.py
+│   └── helpers/                           (Utility modules for the models)
 ├── tarefa_3/
-|   └── Work-in-Progress
+│   └── Work-in-Progress                  (Under development)
 └── tarefa_4/
-    └── Work-in-Progress
+    └── Work-in-Progress                  (Under development)
 
 ```
 
