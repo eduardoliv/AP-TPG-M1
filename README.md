@@ -18,14 +18,14 @@
 
 / (Root)
 ├── tarefa_1/
-│   ├── classify_input_datasets            (Input datasets for classification)
-│   ├── classify_output_datasets           (Output datasets for classified results)
 │   ├── clean_input_datasets               (Cleaned and uniformized input datasets)
 │   ├── clean_output_datasets              (Cleaned and uniformized output datasets)
 │   ├── original_input_datasets            (Original input datasets)
 │   ├── original_output_datasets           (Original output datasets)
 │   └── clean_pipeline.py                  (Script for cleaning and normalizing datasets)
 ├── tarefa_2/
+│   ├── classify_input_datasets            (Input datasets for classification)
+│   ├── classify_output_datasets           (Output datasets for classified results)
 │   ├── lr_model_weights/                  (Logistic Regression model weights)
 │   ├── logistic_regression_model.ipynb    (Notebook for the Logistic Regression model)
 │   ├── dnn_model.ipynb                    (Notebook for the Deep Neural Network model)
@@ -34,16 +34,6 @@
 │   │   ├── dnn_model.py
 │   │   └── logistic_regression_model.py
 │   └── helpers/                           (Utility modules for the models)
-│       ├── activation.py
-│       ├── dataset.py
-│       ├── enums.py
-│       ├── layers.py
-│       ├── losses.py
-│       ├── math.py
-│       ├── metrics.py
-│       ├── model.py
-│       ├── optimizer.py
-│       └── regularizer.py
 ├── tarefa_3/
 │   └── Work-in-Progress                  (Under development)
 └── tarefa_4/
