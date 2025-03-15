@@ -7,6 +7,7 @@
 import os
 import numpy as np
 import json
+import shutil
 
 from .optimizer import Optimizer
 from .activation import SigmoidActivation, ReLUActivation, TanhActivation
@@ -61,7 +62,12 @@ def save_dnn_model(dnn, vocab, idf, model_prefix="dnn_model", folder="dnn_model_
         A JSON file with hyperparameters & layer definitions.
         For each DenseLayer, separate .npy files for weights & biases.
     """
-    # Make sure the folder exists
+
+    # If the folder already exists, remove it entirely (DNN may not have the same structure)
+    if os.path.exists(folder):
+        shutil.rmtree(folder)
+
+    # Now recreate the folder
     os.makedirs(folder, exist_ok=True)
 
     # Construct the file paths
