@@ -110,7 +110,7 @@ class Dataset:
         text = re.sub(r'\S+@\S+', "", text)
         # Remove punctuation
         text = re.sub(r"[^\w\s]", "", text)
-        # Remove  digits
+        # Remove digits
         text = re.sub(r"\d+", "", text)
         # Remove extra whitespace
         text = re.sub(r"\s+", " ", text)
