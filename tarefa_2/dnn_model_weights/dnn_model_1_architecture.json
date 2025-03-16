@@ -1,20 +1,20 @@
 {
   "network": {
-    "epochs": 20,
-    "batch_size": 32,
-    "learning_rate": 0.001,
-    "momentum": 0.9,
+    "epochs": 40,
+    "batch_size": 16,
+    "learning_rate": 0.1,
+    "momentum": 0.95,
     "loss_name": "BinaryCrossEntropy",
     "metric_name": "accuracy"
   },
   "architecture": [
     {
       "type": "DenseLayer",
-      "n_units": 32,
+      "n_units": 64,
       "input_shape": [
         2124
       ],
-      "dropout_rate": 0.1,
+      "dropout_rate": 0.0,
       "weights_file": "dnn_model_1_layer0_weights.npy",
       "biases_file": "dnn_model_1_layer0_biases.npy"
     },
@@ -25,7 +25,7 @@
       "type": "DenseLayer",
       "n_units": 1,
       "input_shape": [
-        32
+        64
       ],
       "dropout_rate": 0.0,
       "weights_file": "dnn_model_1_layer2_weights.npy",
