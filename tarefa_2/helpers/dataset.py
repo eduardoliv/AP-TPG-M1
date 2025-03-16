@@ -15,6 +15,7 @@ from collections import Counter
 from random import shuffle
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
+from nltk.stem import WordNetLemmatizer
 from helpers.model import load_model, load_dnn_model
 from helpers.math import Math
 from helpers.enums import ModelType
@@ -99,6 +100,7 @@ class Dataset:
         # Download required NLTK resources
         nltk.download('stopwords', quiet=True)
         nltk.download('punkt_tab', quiet=True)
+        nltk.download('wordnet', quiet=True)
         # Convert text to lowercase
         text = text.lower()
         # Remove URLs
@@ -119,10 +121,15 @@ class Dataset:
         text = text.strip()
         # Tokenize text and remove stopwords using NLTK's English stopwords list
         stop_words = set(stopwords.words('english'))
+        # Tokenize text
         tokens = word_tokenize(text)
-        filtered_tokens = [token for token in tokens if token not in stop_words]
+        # Remove stopwords
+        filtered_tokens = [tok for tok in tokens if tok not in stop_words]
+        # Lemmatize tokens
+        lemmatizer = WordNetLemmatizer()
+        lemmatized_tokens = [lemmatizer.lemmatize(tok) for tok in filtered_tokens]
         # Return the cleaned text as a string
-        return " ".join(filtered_tokens)
+        return " ".join(lemmatized_tokens)
 
     # ----------------------------------------------------------------
     # Helper functions for vectorizing text using TF-IDF and BoW
