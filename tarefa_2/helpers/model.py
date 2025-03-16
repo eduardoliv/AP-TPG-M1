@@ -24,7 +24,11 @@ def save_model(theta, vocab, idf, model_prefix="logreg_model", folder="lr_model_
     """
     Save model parameters, vocabulary, and IDF vector to disk, inside 'folder'.
     """
-    # Create the folder if it doesn't exist
+    # If the folder already exists, remove it entirely
+    if os.path.exists(folder):
+        shutil.rmtree(folder)
+
+    # Now recreate the folder
     os.makedirs(folder, exist_ok=True)
 
     # Construct the file paths
