@@ -5,24 +5,10 @@
 (Adapted by: Grupo 03)
 """
 
-"""
-Usage example:
-
-TRAIN:
-python rnn_model.py --input_csv ../tarefa_1/clean_input_datasets/dataset1_inputs.csv --output_csv ../tarefa_1/clean_output_datasets/dataset1_outputs.csv --train rnn_modelo.pkl --epochs 50 --batch_size 8 --learning_rate 0.01 --momentum 0.9 --bptt_trunc 2 --verbose True
-python rnn_model.py --input_csv ../tarefa_1/clean_input_datasets/dataset1_inputs.csv --output_csv ../tarefa_1/clean_output_datasets/dataset1_outputs.csv --train 
-
-TEST:
-python rnn_model.py --input_csv ../tarefa_1/clean_input_datasets/gpt_vs_human_data_set_inputs.csv --output_csv ../tarefa_1/clean_output_datasets/gpt_vs_human_data_set_outputs.csv --test rnn_modelo.pkl
-
-python rnn_model.py --input_csv ../tarefa_1/clean_input_datasets/dataset2_inputs.csv --output_csv ../tarefa_1/clean_output_datasets/dataset2_outputs.csv --test rnn_model3.pkl
-"""
-
 from copy import deepcopy
 from typing import Tuple
 
 import numpy as np
-import argparse
 import pickle
 import os
 import re
@@ -33,7 +19,6 @@ from helpers.losses import BinaryCrossEntropy, LossFunction
 from helpers.optimizer import Optimizer
 from helpers.metrics import accuracy
 from helpers.dataset import Dataset
-# from sklearn.metrics import f1_score
 
 def convert_text_to_sequences(df, text_col="Text"):
     texts = df[text_col].astype(str).tolist()
@@ -465,72 +450,3 @@ def test_model(input_csv, output_csv, model_filename):
                 )
     registar_modelo(log_info, model_filename)
     print(f"Teste registrado para {model_filename}.")
-
-###################################################
-
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--input_csv", required=True, help="Path to input CSV (ID, Text)")
-    parser.add_argument("--output_csv", required=True, help="Path to output CSV (ID, Label)")
-    parser.add_argument("--train", action="store_true", help="Treinar o modelo e salvar com este nome")
-    parser.add_argument("--test", metavar="model_filename", help="Testar o modelo usando este nome")
-    # parser.add_argument("--epochs", type=int, default=100, help="Number of training epochs (Default: 100)")
-    # parser.add_argument("--batch_size", type=int, default=6, help="Mini-batch size (Default: 6)")
-    # parser.add_argument("--learning_rate", type=float, default=0.01, help="Learning rate (Default: 0.01)")
-    # parser.add_argument("--momentum", type=float, default=0.9, help="Momentum (Default: 0.9)")
-    # parser.add_argument("--bptt_trunc", type=int, default=1, help="Truncation steps for BPTT (Default: 1)")
-    # parser.add_argument("--verbose", default=True, help="Print training details (Default: True)")
-    args = parser.parse_args()
-
-    # # Load Datasets
-    # train_ds, vocab, max_len = Dataset.create_train_dataset(
-    #     train_input_csv=args.input_csv,
-    #     train_output_csv=args.output_csv,
-    #     max_len=None,
-    #     sep="\t"
-    # )
-
-    # test_ds = Dataset.create_test_dataset(
-    #     test_input_csv=args.input_csv,
-    #     test_output_csv=args.output_csv,
-    #     vocab=vocab,
-    #     max_len=max_len,
-    #     sep="\t"
-    # )
-
-    # # Instantiate the RNN
-    # rnn = RNN(
-    #     n_units=4,
-    #     activation=TanhActivation(),
-    #     bptt_trunc=args.bptt_trunc,
-    #     input_shape=(max_len, 1),  # timesteps=max_len, input_dim=1
-    #     epochs=args.epochs,
-    #     batch_size=args.batch_size,
-    #     learning_rate=args.learning_rate,
-    #     momentum=args.momentum,
-    #     loss=BinaryCrossEntropy,
-    #     metric=accuracy,
-    #     verbose=args.verbose
-    # )
-
-    # # Initialize the RNN with an SGD optimizer
-    # optimizer = Optimizer(learning_rate=args.learning_rate, momentum=args.momentum)
-    # rnn.initialize(optimizer)
-
-    # # Fit the RNN using dataset
-    # rnn.fit(train_ds)
-
-    # # Evaluate final performance
-    # preds = rnn.predict(test_ds.X)
-    # score = rnn.score(test_ds, preds)
-    # print(f"Final score: {score:.4f}")
-
-    if args.train:
-        train_and_evaluate(args.input_csv, args.output_csv)
-    elif args.test:
-        test_model(args.input_csv, args.output_csv, args.test)
-    else:
-        print("Especifique --train ou --test para rodar o script.")
-
-if __name__ == "__main__":
-    main()
