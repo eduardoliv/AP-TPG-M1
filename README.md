@@ -25,7 +25,7 @@
 │   └── clean_pipeline.py                  (Script for cleaning and normalizing datasets)
 ├── tarefa_2/
 │   ├── classify_input_datasets            (Input datasets for classification)
-│   ├── classify_output_datasets           (Output datasets for classified results)
+│   ├── classify_output_datasets           (Output datasets for classified results) [Result Datasets]
 │   ├── logistic_regression_model.ipynb    (Notebook for the Logistic Regression model)
 │   ├── dnn_model.ipynb                    (Notebook for the Deep Neural Network model)
 │   ├── rnn_model.ipynb                    (Notebook for the Recurrent Neural Network model)
