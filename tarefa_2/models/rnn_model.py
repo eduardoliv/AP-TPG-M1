@@ -441,12 +441,9 @@ def test_model(input_csv, output_csv, model_filename):
     
     preds = rnn.predict(test_ds.X)
     acc = accuracy(test_ds.Y, preds)
-    # f1 = f1_score(test_ds.Y, preds)
 
     log_info = (f"Modelo testado: {model_filename}\n"
                 f"Dataset de teste: {input_csv}\n"
-                f"Accuracy: {acc:.4f}\n"
-                # f"F1-score: {f1:.4f}"
-                )
+                f"Accuracy: {acc:.4f}\n")
     registar_modelo(log_info, model_filename)
     print(f"Teste registrado para {model_filename}.")
