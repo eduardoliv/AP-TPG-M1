@@ -33,8 +33,8 @@
 │   ├── dnn_model_weights/                 (Deep Neural Network model weights)
 │   ├── models/                            (Code models used in the notebooks)
 │   │   ├── dnn_model.py
-│   │   ├── logistic_regression_model.py
-│   |   └── rnn_model.py  
+|   |   ├── rnn_model.py
+│   │   └── logistic_regression_model.py
 │   └── helpers/                           (Utility modules for the models)
 ├── tarefa_3/
 │   └── Work-in-Progress                   (Under development)

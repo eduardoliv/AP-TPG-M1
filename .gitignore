@@ -169,3 +169,8 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+# embedding rnn
+
+tarefa_2/helpers/glove.6B.50d.txt
+tarefa_2/helpers/glove.6B.zip
