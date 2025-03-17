@@ -5,11 +5,8 @@
 """
 
 import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
-
-from helpers.dataset import Dataset
-from helpers.model import load_model
+from helpers.math import Math
 
 class LogisticRegression:
     
@@ -44,7 +41,7 @@ class LogisticRegression:
         self.theta = np.zeros(n)
         for its in range(iters):
             # predicted probabilities
-            p = sigmoid(self.X.dot(self.theta))  # shape (m,)
+            p = Math.sigmoid(self.X.dot(self.theta))  # shape (m,)
             # gradient from cross-entropy ## delta shape => (n,)
             delta = self.X.T.dot(p - self.y)  # X.T: (n,m), (p-y): (m,)
             # if L2 reg is on, add lambda * theta for j>=1
@@ -82,7 +79,7 @@ class LogisticRegression:
         return 1 if p >= 0.5 else 0
     
     def predictMany(self, Xt):
-        p = sigmoid(np.dot(Xt, self.theta))
+        p = Math.sigmoid(np.dot(Xt, self.theta))
         return np.where(p >= 0.5, 1, 0)
 
     def probability(self, instance):
@@ -94,7 +91,7 @@ class LogisticRegression:
                 x[1:] = (x[1:] - self.data.mu) / self.data.sigma
             else:
                 x[1:] = (x[1:] - self.mu)
-        return sigmoid(np.dot(self.theta, x))
+        return Math.sigmoid(np.dot(self.theta, x))
 
     def costFunction(self, theta=None):
         """
@@ -122,7 +119,7 @@ class LogisticRegression:
         if theta is None: theta = self.theta
         m = self.X.shape[0]
         # predicted probabilities p = sigmoid(X * theta)
-        p = sigmoid(np.dot(self.X, theta))
+        p = Math.sigmoid(np.dot(self.X, theta))
         # cost1 corresponds to - y^T * log(p + epsilon)
         cost1 = - np.dot(self.y, np.log(p + self.epsilon))
         # cost2 corresponds to - (1 - y)^T * log((1 - p) + epsilon)
@@ -139,7 +136,7 @@ class LogisticRegression:
     def costFunctionReg(self, theta = None, lamda = 1):
         if theta is None: theta=self.theta        
         m = self.X.shape[0]
-        p = sigmoid ( np.dot(self.X, theta) )
+        p = Math.sigmoid ( np.dot(self.X, theta) )
         cost  = (-self.y * np.log(p) - (1-self.y) * np.log(1-p) )
         reg = np.dot(theta[1:], theta[1:]) * lamda / (2*m)
         return (np.sum(cost) / m) + reg
@@ -165,9 +162,6 @@ class LogisticRegression:
         errors = np.abs(preds-yt)
         return 1.0 - np.sum(errors)/yt.shape[0]
 
-def sigmoid(x):
-    return 1 / (1 + np.exp(-x))
-
 def hyperparameter_tuning(train_ds, val_ds, alphas, lambdas, iters_list):
     best_acc = 0
     best_params = {}
@@ -188,27 +182,3 @@ def hyperparameter_tuning(train_ds, val_ds, alphas, lambdas, iters_list):
                     best_acc = val_acc
                     best_params = {"alpha": alpha, "lamda": lamda, "iters": iters}
     return best_params, best_acc, results
-
-def classify_texts(input_csv, output_csv, model_prefix="logreg_model"):
-    """
-    Load model and vocab, then classify a new CSV with columns [ID, Text].
-    """
-    df_new = pd.read_csv(input_csv, sep="\t")
-    theta, vocab = load_model(model_prefix)
-    # vectorize
-    texts = df_new["Text"].astype(str).tolist()
-    X_new = Dataset.vectorize_text_bow(texts, vocab)
-    # add bias
-    X_bias = np.hstack([np.ones((X_new.shape[0], 1)), X_new])
-    # compute probabilities
-    p = sigmoid(np.dot(X_bias, theta))
-    # threshold at 0.5 => AI if >= 0.5, else Human
-    pred_bin = np.where(p >= 0.5, 1, 0)
-    # map 0->Human, 1->AI
-    pred_str = np.where(pred_bin == 1, "AI", "Human")
-    df_out = pd.DataFrame({
-        "ID": df_new["ID"],
-        "Label": pred_str
-    })
-    df_out.to_csv(output_csv, sep="\t", index=False)
-    print(f"Predictions saved to {output_csv}")
