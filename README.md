@@ -12,16 +12,41 @@
 | pg52688 | Jorge Eduardo Quinteiro Oliveira | pg52688@alunos.uminho.pt | 03    |
 | e12338  | Bernardo Dutra Lemos             | e12338@alunos.uminho.pt  | 03    |
 
+### Phase Submissions
+
+#### Delivery 1 - 17/03/2025
+
+Submission 1 is based on the results of the DNN and RNN models.
+Below is the structure of these models, as well as the generated results for the submission. 
+
+```md
+
+/ (Root)
+
+├── tarefa_2/
+    ├── classify_output_datasets/
+    |   ├── dataset2_outputs_rnn_model.csv     **Dataset** generated from RNN model for Submission 1
+    │   └── dataset2_outputs_dnn_model.csv     **Dataset** generated from DNN model for Submission 1
+    ├── dnn_model.ipynb                        **Notebook** for the Deep Neural Network model for Submission 1
+    ├── rnn_model.ipynb                        **Notebook** for the Recurrent Neural Network model for Submission 1
+    ├── dnn_model_weights/                     
+    ├── models/
+    │   ├── dnn_model.py
+    │   └── rnn_model.py
+    └── helpers/
+
+```
+
 ### Repository Organization
 
 ```md
 
 / (Root)
 ├── tarefa_1/
-│   ├── clean_input_datasets               (Cleaned and uniformized input datasets)
-│   ├── clean_output_datasets              (Cleaned and uniformized output datasets)
-│   ├── original_input_datasets            (Original input datasets)
-│   ├── original_output_datasets           (Original output datasets)
+│   ├── clean_input_datasets/              (Cleaned and uniformized input datasets)
+│   ├── clean_output_datasets/             (Cleaned and uniformized output datasets)
+│   ├── original_input_datasets/           (Original input datasets)
+│   ├── original_output_dataset/           (Original output datasets)
 │   └── clean_pipeline.py                  (Script for cleaning and normalizing datasets)
 ├── tarefa_2/
 │   ├── classify_input_datasets            (Input datasets for classification)
