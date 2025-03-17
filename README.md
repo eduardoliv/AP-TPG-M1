@@ -28,11 +28,12 @@
 │   ├── classify_output_datasets           (Output datasets for classified results)
 │   ├── logistic_regression_model.ipynb    (Notebook for the Logistic Regression model)
 │   ├── dnn_model.ipynb                    (Notebook for the Deep Neural Network model)
-│   ├── rnn_model.py                       (Recurrent Neural Network model)
+│   ├── rnn_model.ipynb                    (Notebook for the Recurrent Neural Network model)
 │   ├── lr_model_weights/                  (Logistic Regression model weights)
 │   ├── dnn_model_weights/                 (Deep Neural Network model weights)
 │   ├── models/                            (Code models used in the notebooks)
 │   │   ├── dnn_model.py
+|   |   ├── rnn_model.py
 │   │   └── logistic_regression_model.py
 │   └── helpers/                           (Utility modules for the models)
 ├── tarefa_3/
