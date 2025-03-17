@@ -25,10 +25,10 @@
 │   └── clean_pipeline.py                  (Script for cleaning and normalizing datasets)
 ├── tarefa_2/
 │   ├── classify_input_datasets            (Input datasets for classification)
-│   ├── classify_output_datasets           (Output datasets for classified results)
+│   ├── classify_output_datasets           (Output datasets for classified results) [Result Datasets]
 │   ├── logistic_regression_model.ipynb    (Notebook for the Logistic Regression model)
 │   ├── dnn_model.ipynb                    (Notebook for the Deep Neural Network model)
-│   ├── rnn_model.ipynb                    (Notebook for the Recorrent Neural Network model)
+│   ├── rnn_model.ipynb                    (Notebook for the Recurrent Neural Network model)
 │   ├── lr_model_weights/                  (Logistic Regression model weights)
 │   ├── dnn_model_weights/                 (Deep Neural Network model weights)
 │   ├── models/                            (Code models used in the notebooks)
@@ -42,14 +42,14 @@
     └── Work-in-Progress                   (Under development)
 
 ```
-└──
+
 ### Code Dependencies
 
 #### Using pip
 
 ```bash
 
-pip install pandas chardet scipy nltk
+pip install pandas chardet scipy nltk tqdm
 
 ```
 
@@ -57,6 +57,6 @@ pip install pandas chardet scipy nltk
 
 ```bash
 
-conda install -c conda-forge pandas chardet scipy nltk
+conda install -c conda-forge pandas chardet scipy nltk tqdm
 
 ```
