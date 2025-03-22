@@ -66,6 +66,8 @@ Below is the structure of these models, as well as the generated results for the
 │   ├── classify_output_datasets           (Output datasets for classified results) [Result Datasets]
 │   ├── gru_model_weights/                 (Gated Recurrent Units (GRU) Model weights)
 │   ├── gru_model.ipynb                    (Notebook for the Gated Recurrent Units (GRU) Model)
+│   ├── lstm_model_weights/                (Long Short-Term Memory (LSTM) Model weights)
+│   └── lstm_model.ipynb                   (Notebook for the Long Short-Term Memory (LSTM) Model)
 └── tarefa_4/
     └── Work-in-Progress                   (Under development)
 ```
