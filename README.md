@@ -16,20 +16,32 @@
 
 ### Phase Submissions
 
-#### Delivery 1 - 17/03/2025
+#### Delivery 2 (24/03/2025)
+
+//FIXME: Submission 2 is based on the results of the XXX and YYY models.
+Below is the structure of these models, as well as the generated results for the submission. 
+
+```md
+/ (Root)
+└── Submissao2/
+```
+
+#### Delivery 1 (17/03/2025)
 
 Submission 1 is based on the results of the DNN and RNN models.
 Below is the structure of these models, as well as the generated results for the submission. 
 
 ```md
 / (Root)
-├── tarefa_2/
+└── Submissao1/
+    ├── classify_input_datasets/
     ├── classify_output_datasets/
     │   ├── dataset2_outputs_rnn_model.csv     **Dataset** generated from RNN model for Submission 1
     │   └── dataset2_outputs_dnn_model.csv     **Dataset** generated from DNN model for Submission 1
     ├── dnn_model.ipynb                        **Notebook** for the Deep Neural Network model for Submission 1
     ├── rnn_model.ipynb                        **Notebook** for the Recurrent Neural Network model for Submission 1
-    ├── dnn_model_weights/                     
+    ├── dnn_model_weights/
+    ├── classify_input_datasets/                     
     ├── models/
     │   ├── dnn_model.py
     │   └── rnn_model.py
@@ -42,41 +54,44 @@ Below is the structure of these models, as well as the generated results for the
 
 ```md
 / (Root)
-├── tarefa_1/
-│   ├── clean_input_datasets/              (Cleaned and uniformized input datasets)
-│   ├── clean_output_datasets/             (Cleaned and uniformized output datasets)
-│   ├── original_input_datasets/           (Original input datasets)
-│   ├── original_output_dataset/           (Original output datasets)
-│   └── clean_pipeline.py                  (Script for cleaning and normalizing datasets)
-├── tarefa_2/
-│   ├── classify_input_datasets            (Input datasets for classification)
-│   ├── classify_output_datasets           (Output datasets for classified results) [Result Datasets]
-│   ├── logistic_regression_model.ipynb    (Notebook for the Logistic Regression model)
-│   ├── dnn_model.ipynb                    (Notebook for the Deep Neural Network model)
-│   ├── rnn_model.ipynb                    (Notebook for the Recurrent Neural Network model)
-│   ├── lr_model_weights/                  (Logistic Regression model weights)
-│   ├── dnn_model_weights/                 (Deep Neural Network model weights)
-│   ├── models/                            (Code models used in the notebooks)
-│   │   ├── dnn_model.py
-|   |   ├── rnn_model.py
-│   │   └── logistic_regression_model.py
-│   └── helpers/                           (Utility modules for the models)
-├── tarefa_3/
-│   ├── classify_input_datasets            (Input datasets for classification)
-│   ├── classify_output_datasets           (Output datasets for classified results) [Result Datasets]
-│   ├── gru_model_weights/                 (Gated Recurrent Units (GRU) Model weights)
-│   ├── gru_model.ipynb                    (Notebook for the Gated Recurrent Units (GRU) Model)
-│   ├── lstm_model_weights/                (Long Short-Term Memory (LSTM) Model weights)
-│   └── lstm_model.ipynb                   (Notebook for the Long Short-Term Memory (LSTM) Model)
-└── tarefa_4/
-    └── Work-in-Progress                   (Under development)
+├── Submissao1/                                # Submission 1 delivery models and generated output datasets
+├── Submissao2/                                # Submission 2 delivery models and generated output datasets
+└── Tarefas/
+    ├── tarefa_1/
+    │   ├── clean_input_datasets/              # Cleaned and uniformized input datasets
+    │   ├── clean_output_datasets/             # Cleaned and uniformized output datasets
+    │   ├── original_input_datasets/           # Original input datasets
+    │   ├── original_output_dataset/           # Original output datasets
+    │   └── clean_pipeline.py                  # Script for cleaning and normalizing datasets
+    ├── tarefa_2/
+    │   ├── classify_input_datasets            # Input datasets for classification
+    │   ├── classify_output_datasets           # Output datasets for classified results
+    │   ├── logistic_regression_model.ipynb    # Notebook for the Logistic Regression model
+    │   ├── dnn_model.ipynb                    # Notebook for the Deep Neural Network model
+    │   ├── rnn_model.ipynb                    # Notebook for the Recurrent Neural Network model
+    │   ├── lr_model_weights/                  # Logistic Regression model weights
+    │   ├── dnn_model_weights/                 # Deep Neural Network model weights
+    │   ├── models/                            # Code models used in the notebooks
+    │   │   ├── dnn_model.py
+    |   |   ├── rnn_model.py
+    │   │   └── logistic_regression_model.py
+    │   └── helpers/                           # Utility modules for the models
+    ├── tarefa_3/
+    │   ├── classify_input_datasets            # Input datasets for classification
+    │   ├── classify_output_datasets           # Output datasets for classified results
+    │   ├── gru_model_weights/                 # Gated Recurrent Units (GRU) Model weights
+    │   ├── gru_model.ipynb                    # Notebook for the Gated Recurrent Units (GRU) Model
+    │   ├── lstm_model_weights/                # Long Short-Term Memory (LSTM) Model weights
+    │   └── lstm_model.ipynb                   # Notebook for the Long Short-Term Memory (LSTM) Model
+    └── tarefa_4/
+        └── Work-in-Progress
 ```
 
 ---
 
 ### Code Dependencies
 
-#### (CPU) Using pip
+#### [CPU] Using pip
 
 ```bash
 pip install pandas chardet scipy nltk tqdm matplotlib scikit-learn jupyterlab
@@ -86,7 +101,7 @@ pip install pandas chardet scipy nltk tqdm matplotlib scikit-learn jupyterlab
 jupyter lab
 ```
 
-#### (CPU) Using Conda
+#### [CPU] Using Conda
 
 ```bash
 conda create -n ap python=3.10 -y
@@ -98,7 +113,7 @@ conda install -c conda-forge pandas chardet scipy nltk tqdm matplotlib scikit-le
 conda run jupyter-lab
 ```
 
-#### (NVIDIA GPUs) Using Conda and Tensorflow with CUDA
+#### [NVIDIA GPUs] Using Conda and Tensorflow with CUDA
 
 Validate CUDA and NVCC versions:
 
