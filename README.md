@@ -94,7 +94,7 @@ Below is the structure of these models, as well as the generated results for the
 #### [CPU] Using pip
 
 ```bash
-pip install pandas chardet scipy nltk tqdm matplotlib scikit-learn jupyterlab
+pip install pandas chardet scipy nltk tqdm matplotlib scikit-learn transformers jupyterlab
 ```
 
 ```bash
@@ -106,7 +106,7 @@ jupyter lab
 ```bash
 conda create -n ap python=3.10 -y
 conda activate ap
-conda install -c conda-forge pandas chardet scipy nltk tqdm matplotlib scikit-learn jupyterlab
+conda install -c conda-forge pandas chardet scipy nltk tqdm matplotlib scikit-learn transformers jupyterlab
 ```
 
 ```bash
@@ -150,7 +150,7 @@ Expected output:
 Install the dependencies through pip **(Do not use conda to install dependencies when TensorFlow GPU is installed)**:
 
 ```bash
-pip install tensorflow==2.10.0 numpy==1.23.5 pandas chardet scipy nltk tqdm matplotlib scikit-learn notebook
+pip install tensorflow==2.10.0 numpy==1.23.5 pandas chardet scipy nltk tqdm matplotlib scikit-learn transformers==4.31.0 notebook
 ```
 
 Run Jupiter Lab:
