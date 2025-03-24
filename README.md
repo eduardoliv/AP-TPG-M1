@@ -81,6 +81,10 @@ Below is the structure of these models, as well as the generated results for the
     │   ├── classify_output_datasets           # Output datasets for classified results
     │   ├── gru_model_weights/                 # Gated Recurrent Units (GRU) Model weights
     │   ├── gru_model.ipynb                    # Notebook for the Gated Recurrent Units (GRU) Model
+    │   ├── llm_bert_model_weights/            # Bidirectional Encoder Representations from Transformers (BERT) Model weights
+    │   ├── llm_bert_model.ipynb               # Notebook for the Bidirectional Encoder Representations from Transformers (BERT) Model
+    │   ├── llm_roberta_model_weights/         # Robustly Optimized BERT Pretraining Approach (RoBERTa) Model weights
+    │   ├── llm_roberta_model.ipynb            # Notebook for the Robustly Optimized BERT Pretraining Approach (RoBERTa) Model
     │   ├── lstm_model_weights/                # Long Short-Term Memory (LSTM) Model weights
     │   └── lstm_model.ipynb                   # Notebook for the Long Short-Term Memory (LSTM) Model
     └── tarefa_4/
