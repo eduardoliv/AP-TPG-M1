@@ -18,12 +18,20 @@
 
 #### Delivery 2 (24/03/2025)
 
-//FIXME: Submission 2 is based on the results of the XXX and YYY models.
+Submission 2 is based on the results of the BERT and RoBERTa LLM models.
 Below is the structure of these models, as well as the generated results for the submission. 
 
 ```md
 / (Root)
 └── Submissao2/
+    ├── classify_input_datasets/
+    ├── classify_output_datasets/
+    │   ├── dataset3_outputs_llm_bert_model-s1.csv        **Dataset** generated from BERT LLM model for Submission 2
+    │   └── dataset3_outputs_llm_roberta_model-s2.csv     **Dataset** generated from RoBERTa LLM model for Submission 2
+    ├── llm_bert_model-s1.ipynb                           **Notebook** for the BERT LLM model for Submission 2
+    ├── llm_roberta_model-s2.ipynb                        **Notebook** for the RoBERTa LLM model for Submission 2
+    ├──  llm_bert_model_weights/
+    └──  llm_roberta_model_weights/
 ```
 
 #### Delivery 1 (17/03/2025)
@@ -40,8 +48,7 @@ Below is the structure of these models, as well as the generated results for the
     │   └── dataset2_outputs_dnn_model.csv     **Dataset** generated from DNN model for Submission 1
     ├── dnn_model.ipynb                        **Notebook** for the Deep Neural Network model for Submission 1
     ├── rnn_model.ipynb                        **Notebook** for the Recurrent Neural Network model for Submission 1
-    ├── dnn_model_weights/
-    ├── classify_input_datasets/                     
+    ├── dnn_model_weights/         
     ├── models/
     │   ├── dnn_model.py
     │   └── rnn_model.py
