@@ -1,35 +1,22 @@
 {
   "network": {
-    "epochs": 40,
-    "batch_size": 8,
-    "learning_rate": 0.1,
-    "momentum": 0.85,
+    "epochs": 150,
+    "batch_size": 32,
+    "learning_rate": 0.01,
+    "momentum": 0.9,
     "loss_name": "BinaryCrossEntropy",
     "metric_name": "accuracy"
   },
   "architecture": [
     {
       "type": "DenseLayer",
-      "n_units": 128,
-      "input_shape": [
-        1928
-      ],
-      "dropout_rate": 0.5,
-      "weights_file": "dnn_model_1_layer0_weights.npy",
-      "biases_file": "dnn_model_1_layer0_biases.npy"
-    },
-    {
-      "type": "ReLUActivation"
-    },
-    {
-      "type": "DenseLayer",
       "n_units": 64,
       "input_shape": [
-        128
+        1000
       ],
-      "dropout_rate": 0.5,
-      "weights_file": "dnn_model_1_layer2_weights.npy",
-      "biases_file": "dnn_model_1_layer2_biases.npy"
+      "dropout_rate": 0.1,
+      "weights_file": "dnn_model_1_layer0_weights.npy",
+      "biases_file": "dnn_model_1_layer0_biases.npy"
     },
     {
       "type": "ReLUActivation"
@@ -41,8 +28,8 @@
         64
       ],
       "dropout_rate": 0.0,
-      "weights_file": "dnn_model_1_layer4_weights.npy",
-      "biases_file": "dnn_model_1_layer4_biases.npy"
+      "weights_file": "dnn_model_1_layer2_weights.npy",
+      "biases_file": "dnn_model_1_layer2_biases.npy"
     },
     {
       "type": "SigmoidActivation"
