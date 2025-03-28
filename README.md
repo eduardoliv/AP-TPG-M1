@@ -74,8 +74,8 @@ Below is the structure of these models, as well as the generated results for the
 ├── Submissao1/                                # Submission 1 delivery models and generated output datasets
 ├── Submissao2/                                # Submission 2 delivery models and generated output datasets
 ├── Submissao3/                                # Submission 3 delivery models and generated output datasets
-├── Report/                                    # Practical Assignment Work Report
-├── Presentation/                              # Practical Assignment Work Presentation
+├── Relatorio/                                 # Practical Assignment Work Report
+├── Apresentacao/                              # Practical Assignment Work Presentation
 └── Tarefas/
     ├── tarefa_1/
     │   ├── clean_input_datasets/              # Cleaned and uniformized input datasets
