@@ -16,6 +16,16 @@
 
 ### Phase Submissions
 
+#### Delivery 3 (31/03/2025)
+
+Submission 3 is based on the results of the xx and xx models.
+Below is the structure of these models, as well as the generated results for the submission. 
+
+```md
+/ (Root)
+└── Submissao3/
+```
+
 #### Delivery 2 (24/03/2025)
 
 Submission 2 is based on the results of the BERT and RoBERTa LLM models.
@@ -63,6 +73,8 @@ Below is the structure of these models, as well as the generated results for the
 / (Root)
 ├── Submissao1/                                # Submission 1 delivery models and generated output datasets
 ├── Submissao2/                                # Submission 2 delivery models and generated output datasets
+├── Submissao3/                                # Submission 3 delivery models and generated output datasets
+├── Report/                                    # Practical Assignment Work Report
 └── Tarefas/
     ├── tarefa_1/
     │   ├── clean_input_datasets/              # Cleaned and uniformized input datasets
