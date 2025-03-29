@@ -3,7 +3,8 @@
 """
 @author: Grupo 03
 
-Validate ipsis verbis sentences on google custom search
+Validate ipsis verbis sentences on google custom search.
+Returns True if there's an existing match, False otherwise.
 """
 
 import requests
