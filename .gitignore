@@ -173,6 +173,7 @@ cython_debug/
 # Model dependencies and weights that exceeds GitHub max file size
 Tarefas/tarefa_2/helpers/glove.6B.50d.txt
 Tarefas/tarefa_2/helpers/glove.6B.zip
+Tarefas/tarefa_2/dnn_model_weights/*
 Tarefas/tarefa_2/lr_model_weights/*
 Tarefas/tarefa_3/gru_model_weights/*
 Tarefas/tarefa_3/llm_bert_model_weights/*

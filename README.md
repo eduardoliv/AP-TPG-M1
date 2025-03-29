@@ -89,26 +89,18 @@ Below is the structure of these models, as well as the generated results for the
     │   ├── logistic_regression_model.ipynb    # Notebook for the Logistic Regression model
     │   ├── dnn_model.ipynb                    # Notebook for the Deep Neural Network model
     │   ├── rnn_model.ipynb                    # Notebook for the Recurrent Neural Network model
-    │   ├── lr_model_weights/                  # Logistic Regression model weights
-    │   ├── dnn_model_weights/                 # Deep Neural Network model weights
     │   ├── models/                            # Code models used in the notebooks
     │   │   ├── dnn_model.py
     |   |   ├── rnn_model.py
     │   │   └── logistic_regression_model.py
     │   └── helpers/                           # Utility modules for the models
-    ├── tarefa_3/
-    │   ├── classify_input_datasets            # Input datasets for classification
-    │   ├── classify_output_datasets           # Output datasets for classified results
-    │   ├── gru_model_weights/                 # Gated Recurrent Units (GRU) Model weights
-    │   ├── gru_model.ipynb                    # Notebook for the Gated Recurrent Units (GRU) Model
-    │   ├── llm_bert_model_weights/            # Bidirectional Encoder Representations from Transformers (BERT) Model weights
-    │   ├── llm_bert_model.ipynb               # Notebook for the Bidirectional Encoder Representations from Transformers (BERT) Model
-    │   ├── llm_roberta_model_weights/         # Robustly Optimized BERT Pretraining Approach (RoBERTa) Model weights
-    │   ├── llm_roberta_model.ipynb            # Notebook for the Robustly Optimized BERT Pretraining Approach (RoBERTa) Model
-    │   ├── lstm_model_weights/                # Long Short-Term Memory (LSTM) Model weights
-    │   └── lstm_model.ipynb                   # Notebook for the Long Short-Term Memory (LSTM) Model
-    └── tarefa_4/
-        └── Work-in-Progress
+    └── tarefa_3/
+        ├── classify_input_datasets            # Input datasets for classification
+        ├── classify_output_datasets           # Output datasets for classified results
+        ├── gru_model.ipynb                    # Notebook for the Gated Recurrent Units (GRU) Model
+        ├── llm_bert_model.ipynb               # Notebook for the Bidirectional Encoder Representations from Transformers (BERT) Model
+        ├── llm_roberta_model.ipynb            # Notebook for the Robustly Optimized BERT Pretraining Approach (RoBERTa) Model
+        └── lstm_model.ipynb                   # Notebook for the Long Short-Term Memory (LSTM) Model
 ```
 
 ---
