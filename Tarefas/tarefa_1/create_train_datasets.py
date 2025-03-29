@@ -68,8 +68,8 @@ def main():
     parser.add_argument("--clean_output_dir", default="clean_output_datasets", help="Directory for cleaned output datasets")
     parser.add_argument("--test_input_dir", default="test_input_dataset", help="Directory to store merged input training dataset")
     parser.add_argument("--test_output_dir", default="test_output_dataset", help="Directory to store merged output training dataset")
-    parser.add_argument("--min_words", type=int, default=80, help="Minimum number of words in the Text field")
-    parser.add_argument("--max_words", type=int, default=140, help="Maximum number of words in the Text field")
+    parser.add_argument("--min_words", type=int, default=90, help="Minimum number of words in the Text field")
+    parser.add_argument("--max_words", type=int, default=135, help="Maximum number of words in the Text field")
     args = parser.parse_args()
     
     # Create output directories if they don't exist
@@ -106,8 +106,19 @@ def main():
         print("No valid merged data found from the given file pairs.")
         return
 
-    # Concatenate all merged data into a single DataFrame
+        # Concatenate all merged data into a single DataFrame
     global_df = pd.concat(merged_data_list, ignore_index=True)
+    
+    # If dataset has more than 110 rows, balance the labels (equal number of "AI" and "Human")
+    if len(global_df) > 110:
+        count_ai = (global_df['Label'] == 'AI').sum()
+        count_human = (global_df['Label'] == 'Human').sum()
+        min_count = min(count_ai, count_human)
+        print(f"Balancing dataset: AI count = {count_ai}, Human count = {count_human}. Using {min_count} samples from each class.")
+        global_df = pd.concat([
+            global_df[global_df['Label'] == 'AI'].sample(min_count, random_state=42),
+            global_df[global_df['Label'] == 'Human'].sample(min_count, random_state=42)
+        ]).reset_index(drop=True)
     
     # Shuffle the merged data (using a fixed seed for reproducibility)
     global_df = global_df.sample(frac=1, random_state=42).reset_index(drop=True)
