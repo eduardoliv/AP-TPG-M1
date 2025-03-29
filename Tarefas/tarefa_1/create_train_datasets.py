@@ -68,7 +68,7 @@ def main():
     parser.add_argument("--clean_output_dir", default="clean_output_datasets", help="Directory for cleaned output datasets")
     parser.add_argument("--test_input_dir", default="test_input_dataset", help="Directory to store merged input training dataset")
     parser.add_argument("--test_output_dir", default="test_output_dataset", help="Directory to store merged output training dataset")
-    parser.add_argument("--min_words", type=int, default=100, help="Minimum number of words in the Text field")
+    parser.add_argument("--min_words", type=int, default=80, help="Minimum number of words in the Text field")
     parser.add_argument("--max_words", type=int, default=140, help="Maximum number of words in the Text field")
     args = parser.parse_args()
     
