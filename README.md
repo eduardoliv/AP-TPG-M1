@@ -18,17 +18,22 @@
 
 #### Delivery 3 (31/03/2025)
 
-Submission 3 is based on the results of the xx and xx models.
+Submission 3 is based on the results of the [xx] and RoBERTa Transformer LLM models.
 Below is the structure of these models, as well as the generated results for the submission. 
 
 ```md
 / (Root)
 └── Submissao3/
+    ├── classify_input_datasets/
+    ├── classify_output_datasets/
+    │   └── submission3_outputs_llm_roberta_model-s1.csv  **Dataset** generated from RoBERTa LLM model for Submission 3
+    ├── llm_roberta_model-s2.ipynb                        **Notebook** for the RoBERTa LLM model for Submission 3
+    └── llm_roberta_model_weights/
 ```
 
 #### Delivery 2 (24/03/2025)
 
-Submission 2 is based on the results of the BERT and RoBERTa LLM models.
+Submission 2 is based on the results of the BERT and RoBERTa Transformer LLM models.
 Below is the structure of these models, as well as the generated results for the submission. 
 
 ```md
@@ -82,7 +87,9 @@ Below is the structure of these models, as well as the generated results for the
     │   ├── clean_output_datasets/             # Cleaned and uniformized output datasets
     │   ├── original_input_datasets/           # Original input datasets
     │   ├── original_output_dataset/           # Original output datasets
-    │   └── clean_pipeline.py                  # Script for cleaning and normalizing datasets
+    |   ├── create_train_datasets.py           # Script for merge cleaned input and output datasets to create a training dataset for Models
+    │   ├── google_custom_search.py            # Script for validate ipsis verbis sentences on google custom search
+    │   └── clean_pipeline.py                  # Script for cleaning pipeline for various dataset formats
     ├── tarefa_2/
     │   ├── classify_input_datasets            # Input datasets for classification
     │   ├── classify_output_datasets           # Output datasets for classified results
