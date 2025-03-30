@@ -1,7 +1,7 @@
 ID	Label
 D3-1	Human
 D3-2	AI
-D3-3	Human
+D3-3	AI
 D3-4	Human
 D3-5	Human
 D3-6	AI
@@ -12,7 +12,7 @@ D3-10	AI
 D3-11	Human
 D3-12	Human
 D3-13	AI
-D3-14	AI
+D3-14	Human
 D3-15	Human
 D3-16	Human
 D3-17	AI
@@ -38,7 +38,7 @@ D3-36	Human
 D3-37	AI
 D3-38	Human
 D3-39	Human
-D3-40	Human
+D3-40	AI
 D3-41	AI
 D3-42	Human
 D3-43	AI
@@ -53,12 +53,12 @@ D3-51	Human
 D3-52	Human
 D3-53	AI
 D3-54	Human
-D3-55	Human
+D3-55	AI
 D3-56	AI
 D3-57	Human
 D3-58	AI
-D3-59	Human
-D3-60	Human
+D3-59	AI
+D3-60	AI
 D3-61	Human
 D3-62	Human
 D3-63	AI
@@ -78,9 +78,9 @@ D3-76	AI
 D3-77	Human
 D3-78	Human
 D3-79	Human
-D3-80	AI
+D3-80	Human
 D3-81	AI
-D3-82	Human
+D3-82	AI
 D3-83	Human
 D3-84	AI
 D3-85	AI
@@ -90,7 +90,7 @@ D3-88	AI
 D3-89	Human
 D3-90	Human
 D3-91	Human
-D3-92	AI
+D3-92	Human
 D3-93	Human
 D3-94	Human
 D3-95	AI
