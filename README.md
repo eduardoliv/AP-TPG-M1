@@ -18,7 +18,8 @@
 
 #### Delivery 3 (31/03/2025)
 
-Submission 3 is based on the results of the [xx] and RoBERTa Transformer LLM models.
+Submission 3 is based on the results of the BERT and RoBERTa Transformer LLM models. 
+The weights from bert model weren't commited due to memory issues.
 Below is the structure of these models, as well as the generated results for the submission. 
 
 ```md
@@ -27,8 +28,11 @@ Below is the structure of these models, as well as the generated results for the
     ├── classify_input_datasets/
     ├── classify_output_datasets/
     │   └── submission3_outputs_llm_roberta_model-s1.csv  **Dataset** generated from RoBERTa LLM model for Submission 3
-    ├── llm_roberta_model-s2.ipynb                        **Notebook** for the RoBERTa LLM model for Submission 3
+    │   └── submission3_outputs_llm_bert_model-s2.csv     **Dataset** generated from BERT LLM model for Submission 3
+    ├── llm_roberta_model-s1.ipynb                        **Notebook** for the RoBERTa LLM model for Submission 3
+    ├── llm_bert_model-s2.ipynb                           **Notebook** for the BERT LLM model for Submission 3
     └── llm_roberta_model_weights/
+
 ```
 
 #### Delivery 2 (24/03/2025)
