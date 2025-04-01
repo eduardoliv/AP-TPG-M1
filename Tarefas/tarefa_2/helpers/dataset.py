@@ -387,6 +387,20 @@ class Dataset:
         df_out.to_csv(output_csv, sep=sep, index=False)
         print(f"[{model_type.name}] Predictions saved to {output_csv}")
 
+        # Load the validation dataset
+        df_true = pd.read_csv("../tarefa_1/validation_dataset/dataset3_disclosed_output.csv", sep="\t")
+
+        # Merge the datasets on the "ID" column, adding suffixes to distinguish the identical column names
+        df_merged = pd.merge(df_true, df_out, on="ID", suffixes=('_true', '_pred'))
+
+        # Calculate the number of correct predictions by comparing the "Label" columns
+        num_correct = (df_merged["Label_true"] == df_merged["Label_pred"]).sum()
+
+        # Calculate the percentage of correct predictions
+        accuracy_percentage = (num_correct / len(df_merged)) * 100
+
+        print(f"Accuracy: {accuracy_percentage:.2f}%")
+
     # ----------------------------------------------------------------
     # Helper functions for creating tokenized datasets with padding
     # ----------------------------------------------------------------
